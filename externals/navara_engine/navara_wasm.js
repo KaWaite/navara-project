@@ -393,80 +393,80 @@ export class BillboardMaterial {
         wasm.__wbg_set_billboardmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get size() {
         const ret = wasm.__wbg_get_billboardmaterial_size(this.__wbg_ptr);
-        return ret;
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set size(arg0) {
-        wasm.__wbg_set_billboardmaterial_size(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get color() {
         const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
-        return ret >>> 0;
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
-     * @returns {Vec2}
+     * @returns {Vec2 | undefined}
      */
     get center() {
         const ret = wasm.__wbg_get_billboardmaterial_center(this.__wbg_ptr);
-        return Vec2.__wrap(ret);
+        return ret === 0 ? undefined : Vec2.__wrap(ret);
     }
     /**
-     * @param {Vec2} arg0
+     * @param {Vec2 | undefined} [arg0]
      */
     set center(arg0) {
-        _assertClass(arg0, Vec2);
-        var ptr0 = arg0.__destroy_into_raw();
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec2);
+            ptr0 = arg0.__destroy_into_raw();
+        }
         wasm.__wbg_set_billboardmaterial_center(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get height() {
         const ret = wasm.__wbg_get_billboardmaterial_height(this.__wbg_ptr);
-        return ret;
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set height(arg0) {
-        wasm.__wbg_set_billboardmaterial_height(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
-     * @returns {string}
+     * @returns {string | undefined}
      */
     get url() {
-        let deferred1_0;
-        let deferred1_1;
-        try {
-            const ret = wasm.__wbg_get_billboardmaterial_url(this.__wbg_ptr);
-            deferred1_0 = ret[0];
-            deferred1_1 = ret[1];
-            return getStringFromWasm0(ret[0], ret[1]);
-        } finally {
-            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        const ret = wasm.__wbg_get_billboardmaterial_url(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         }
+        return v1;
     }
     /**
-     * @param {string} arg0
+     * @param {string | undefined} [arg0]
      */
     set url(arg0) {
-        const ptr0 = passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
+        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
         wasm.__wbg_set_billboardmaterial_url(this.__wbg_ptr, ptr0, len0);
     }
     /**
@@ -483,30 +483,30 @@ export class BillboardMaterial {
         wasm.__wbg_set_billboardmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {boolean}
+     * @returns {boolean | undefined}
      */
     get clamp_to_ground() {
         const ret = wasm.__wbg_get_billboardmaterial_clamp_to_ground(this.__wbg_ptr);
-        return ret !== 0;
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * @param {boolean} arg0
+     * @param {boolean | undefined} [arg0]
      */
     set clamp_to_ground(arg0) {
-        wasm.__wbg_set_billboardmaterial_clamp_to_ground(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {boolean}
+     * @returns {boolean | undefined}
      */
     get depth_test() {
         const ret = wasm.__wbg_get_billboardmaterial_depth_test(this.__wbg_ptr);
-        return ret !== 0;
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * @param {boolean} arg0
+     * @param {boolean | undefined} [arg0]
      */
     set depth_test(arg0) {
-        wasm.__wbg_set_billboardmaterial_depth_test(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
 }
 
@@ -3574,14 +3574,14 @@ export class ModelMaterial {
      * @returns {number | undefined}
      */
     get size() {
-        const ret = wasm.__wbg_get_modelmaterial_size(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_billboardmaterial_size(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
     set size(arg0) {
-        wasm.__wbg_set_modelmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_billboardmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
@@ -3809,7 +3809,7 @@ export class MvtLayerDescription {
      * @returns {PointMaterial | undefined}
      */
     get point() {
-        const ret = wasm.__wbg_get_mvtlayerdescription_point(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_geojsonlayerdescription_point(this.__wbg_ptr);
         return ret === 0 ? undefined : PointMaterial.__wrap(ret);
     }
     /**
@@ -3821,13 +3821,13 @@ export class MvtLayerDescription {
             _assertClass(arg0, PointMaterial);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_mvtlayerdescription_point(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_geojsonlayerdescription_point(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {BillboardMaterial | undefined}
      */
     get billboard() {
-        const ret = wasm.__wbg_get_mvtlayerdescription_billboard(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_geojsonlayerdescription_billboard(this.__wbg_ptr);
         return ret === 0 ? undefined : BillboardMaterial.__wrap(ret);
     }
     /**
@@ -3839,7 +3839,7 @@ export class MvtLayerDescription {
             _assertClass(arg0, BillboardMaterial);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_mvtlayerdescription_billboard(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_geojsonlayerdescription_billboard(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {PolylineMaterial | undefined}
@@ -4046,107 +4046,110 @@ export class PointMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_pointmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_pointmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_modelmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get size() {
-        const ret = wasm.__wbg_get_pointmaterial_size(this.__wbg_ptr);
-        return ret;
+        const ret = wasm.__wbg_get_billboardmaterial_size(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set size(arg0) {
-        wasm.__wbg_set_pointmaterial_size(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get color() {
-        const ret = wasm.__wbg_get_pointmaterial_color(this.__wbg_ptr);
-        return ret >>> 0;
+        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_pointmaterial_color(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
-     * @returns {Vec2}
+     * @returns {Vec2 | undefined}
      */
     get center() {
-        const ret = wasm.__wbg_get_pointmaterial_center(this.__wbg_ptr);
-        return Vec2.__wrap(ret);
+        const ret = wasm.__wbg_get_billboardmaterial_center(this.__wbg_ptr);
+        return ret === 0 ? undefined : Vec2.__wrap(ret);
     }
     /**
-     * @param {Vec2} arg0
+     * @param {Vec2 | undefined} [arg0]
      */
     set center(arg0) {
-        _assertClass(arg0, Vec2);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_pointmaterial_center(this.__wbg_ptr, ptr0);
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec2);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_billboardmaterial_center(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get height() {
-        const ret = wasm.__wbg_get_pointmaterial_height(this.__wbg_ptr);
-        return ret;
+        const ret = wasm.__wbg_get_billboardmaterial_height(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set height(arg0) {
-        wasm.__wbg_set_pointmaterial_height(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
     get scale_by_distance() {
-        const ret = wasm.__wbg_get_pointmaterial_scale_by_distance(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_clamp_to_ground(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set scale_by_distance(arg0) {
-        wasm.__wbg_set_pointmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_modelmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {boolean}
+     * @returns {boolean | undefined}
      */
     get clamp_to_ground() {
-        const ret = wasm.__wbg_get_pointmaterial_clamp_to_ground(this.__wbg_ptr);
-        return ret !== 0;
+        const ret = wasm.__wbg_get_modelmaterial_should_rotate_in_default(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * @param {boolean} arg0
+     * @param {boolean | undefined} [arg0]
      */
     set clamp_to_ground(arg0) {
-        wasm.__wbg_set_pointmaterial_clamp_to_ground(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_modelmaterial_should_rotate_in_default(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {boolean}
+     * @returns {boolean | undefined}
      */
     get depth_test() {
         const ret = wasm.__wbg_get_pointmaterial_depth_test(this.__wbg_ptr);
-        return ret !== 0;
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * @param {boolean} arg0
+     * @param {boolean | undefined} [arg0]
      */
     set depth_test(arg0) {
-        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
 }
 
@@ -4209,7 +4212,7 @@ export class PointMesh {
      * @returns {TransferableSingleGeometry}
      */
     get geometry() {
-        const ret = wasm.__wbg_get_billboardmesh_geometry(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_pointmesh_geometry(this.__wbg_ptr);
         return TransferableSingleGeometry.__wrap(ret);
     }
     /**
@@ -4218,7 +4221,7 @@ export class PointMesh {
     set geometry(arg0) {
         _assertClass(arg0, TransferableSingleGeometry);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_billboardmesh_geometry(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_pointmesh_geometry(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {boolean}
@@ -4473,79 +4476,79 @@ export class PolygonMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_polygonmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_polygonmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_modelmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get color() {
         const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
-        return ret >>> 0;
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {boolean | undefined}
      */
     get clamp_to_ground() {
-        const ret = wasm.__wbg_get_polygonmaterial_clamp_to_ground(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_clamp_to_ground(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set clamp_to_ground(arg0) {
-        wasm.__wbg_set_polygonmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_modelmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get height() {
-        const ret = wasm.__wbg_get_modelmaterial_size(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | undefined} [arg0]
-     */
-    set height(arg0) {
-        wasm.__wbg_set_modelmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get extruded_height() {
         const ret = wasm.__wbg_get_modelmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
-    set extruded_height(arg0) {
+    set height(arg0) {
         wasm.__wbg_set_modelmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get extruded_height() {
+        const ret = wasm.__wbg_get_modelmaterial_max_sse(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | undefined} [arg0]
+     */
+    set extruded_height(arg0) {
+        wasm.__wbg_set_modelmaterial_max_sse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
     get wireframe() {
-        const ret = wasm.__wbg_get_billboardmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_should_rotate_in_default(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set wireframe(arg0) {
-        wasm.__wbg_set_billboardmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_modelmaterial_should_rotate_in_default(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {PolygonInternalMaterial | undefined}
@@ -4566,8 +4569,8 @@ export class PolygonMaterial {
         wasm.__wbg_set_polygonmaterial___internal__(this.__wbg_ptr, ptr0);
     }
     /**
-     * @param {boolean | undefined} show
-     * @param {number} color
+     * @param {boolean | undefined} [show]
+     * @param {number | undefined} [color]
      * @param {boolean | undefined} [clamp_to_ground]
      * @param {number | undefined} [height]
      * @param {number | undefined} [extruded_height]
@@ -4580,7 +4583,7 @@ export class PolygonMaterial {
             _assertClass(__internal__, PolygonInternalMaterial);
             ptr0 = __internal__.__destroy_into_raw();
         }
-        const ret = wasm.polygonmaterial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, color, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(extruded_height) ? 0x100000001 : Math.fround(extruded_height), isLikeNone(wireframe) ? 0xFFFFFF : wireframe ? 1 : 0, ptr0);
+        const ret = wasm.polygonmaterial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(extruded_height) ? 0x100000001 : Math.fround(extruded_height), isLikeNone(wireframe) ? 0xFFFFFF : wireframe ? 1 : 0, ptr0);
         this.__wbg_ptr = ret >>> 0;
         PolygonMaterialFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -4994,66 +4997,66 @@ export class PolylineMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_polygonmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_polygonmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
-    }
-    /**
-     * @returns {number}
-     */
-    get color() {
-        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-     * @param {number} arg0
-     */
-    set color(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_modelmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
-    get width() {
-        const ret = wasm.__wbg_get_modelmaterial_size(this.__wbg_ptr);
+    get color() {
+        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
-    set width(arg0) {
-        wasm.__wbg_set_modelmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
-    }
-    /**
-     * @returns {boolean | undefined}
-     */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_polygonmaterial_clamp_to_ground(this.__wbg_ptr);
-        return ret === 0xFFFFFF ? undefined : ret !== 0;
-    }
-    /**
-     * @param {boolean | undefined} [arg0]
-     */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_polygonmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set color(arg0) {
+        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
-    get height() {
+    get width() {
         const ret = wasm.__wbg_get_modelmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
-    set height(arg0) {
+    set width(arg0) {
         wasm.__wbg_set_modelmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    get clamp_to_ground() {
+        const ret = wasm.__wbg_get_modelmaterial_clamp_to_ground(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @param {boolean | undefined} [arg0]
+     */
+    set clamp_to_ground(arg0) {
+        wasm.__wbg_set_modelmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get height() {
+        const ret = wasm.__wbg_get_modelmaterial_max_sse(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | undefined} [arg0]
+     */
+    set height(arg0) {
+        wasm.__wbg_set_modelmaterial_max_sse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {PolylineInternalMaterial | undefined}
@@ -5074,8 +5077,8 @@ export class PolylineMaterial {
         wasm.__wbg_set_polygonmaterial___internal__(this.__wbg_ptr, ptr0);
     }
     /**
-     * @param {boolean | undefined} show
-     * @param {number} color
+     * @param {boolean | undefined} [show]
+     * @param {number | undefined} [color]
      * @param {boolean | undefined} [clamp_to_ground]
      * @param {number | undefined} [height]
      * @param {number | undefined} [width]
@@ -5087,7 +5090,7 @@ export class PolylineMaterial {
             _assertClass(__internal__, PolylineInternalMaterial);
             ptr0 = __internal__.__destroy_into_raw();
         }
-        const ret = wasm.polylinematerial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, color, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(width) ? 0x100000001 : Math.fround(width), ptr0);
+        const ret = wasm.polylinematerial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(width) ? 0x100000001 : Math.fround(width), ptr0);
         this.__wbg_ptr = ret >>> 0;
         PolylineMaterialFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -5218,43 +5221,43 @@ export class RasterTerrainMaterial {
         wasm.__wbg_set_rasterterrainmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get segments() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_segments(this.__wbg_ptr);
-        return ret >>> 0;
+        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set segments(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_segments(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get max_zoom() {
-        const ret = wasm.__wbg_get_pointmaterial_color(this.__wbg_ptr);
-        return ret >>> 0;
+        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set max_zoom(arg0) {
-        wasm.__wbg_set_pointmaterial_color(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     get min_zoom() {
-        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
-        return ret >>> 0;
+        const ret = wasm.__wbg_get_rasterterrainmaterial_min_zoom(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {number} arg0
+     * @param {number | undefined} [arg0]
      */
     set min_zoom(arg0) {
-        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_rasterterrainmaterial_min_zoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {boolean | undefined}
@@ -5270,18 +5273,21 @@ export class RasterTerrainMaterial {
         wasm.__wbg_set_rasterterrainmaterial_wireframe(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {ElevationDecoder}
+     * @returns {ElevationDecoder | undefined}
      */
     get elevation_decoder() {
         const ret = wasm.__wbg_get_rasterterrainmaterial_elevation_decoder(this.__wbg_ptr);
-        return ElevationDecoder.__wrap(ret);
+        return ret === 0 ? undefined : ElevationDecoder.__wrap(ret);
     }
     /**
-     * @param {ElevationDecoder} arg0
+     * @param {ElevationDecoder | undefined} [arg0]
      */
     set elevation_decoder(arg0) {
-        _assertClass(arg0, ElevationDecoder);
-        var ptr0 = arg0.__destroy_into_raw();
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, ElevationDecoder);
+            ptr0 = arg0.__destroy_into_raw();
+        }
         wasm.__wbg_set_rasterterrainmaterial_elevation_decoder(this.__wbg_ptr, ptr0);
     }
     /**
@@ -5373,40 +5379,40 @@ export class RasterTileMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_rastertilematerial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_rastertilematerial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get segments() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_tile_size(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
     set segments(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_tile_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
     get color() {
-        const ret = wasm.__wbg_get_rastertilematerial_color(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_rastertilematerial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
@@ -5451,14 +5457,14 @@ export class RasterTileMaterial {
      * @returns {boolean | undefined}
      */
     get wireframe() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_wireframe(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_rastertilematerial_wireframe(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set wireframe(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_wireframe(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_rastertilematerial_wireframe(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
@@ -6399,7 +6405,7 @@ export class TileLayerDescription {
     set type(arg0) {
         const ptr0 = passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_terrainlayerdescription_type(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_tilelayerdescription_type(this.__wbg_ptr, ptr0, len0);
     }
     /**
      * @returns {any}
@@ -8065,14 +8071,14 @@ export class VectorTileMaterial {
      * @returns {number | undefined}
      */
     get max_zoom() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_tile_size(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | undefined} [arg0]
      */
     set max_zoom(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_tile_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}

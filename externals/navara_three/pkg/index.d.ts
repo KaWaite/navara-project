@@ -21,7 +21,7 @@ export declare type AbortControllers = Map<string, AbortController>;
 
 export declare type Antialias = {
     enabled: boolean;
-    effect: "fxaa" | "smaa";
+    effect?: "fxaa" | "smaa";
 };
 
 export declare type B3dmLayer = Layer<B3dmLayerDescription & {
@@ -86,6 +86,8 @@ export declare type Options = {
     light?: Light;
     backgroundColor?: number;
     picking?: Picking;
+    multisampling?: number;
+    halfFloat?: boolean;
 };
 
 declare type Picking = {
@@ -137,6 +139,7 @@ declare class ThreeView {
     private _meshHandler;
     private _eventManager;
     private _pickHelper?;
+    private _defaultTextureOptions;
     constructor(options: Options);
     get scene(): Scene;
     init(): Promise<void>;

@@ -1,6 +1,17 @@
 import ThreeView from "@navara/three";
+import { fetchGeoJSON } from "../../utils";
 
-const view = new ThreeView({
-  debug: true,
-});
+const view = new ThreeView({});
 await view.init();
+
+view.addLayer({
+  type: "tiles",
+  data: {
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  },
+  raster_tile: {
+    max_zoom: 23,
+  },
+});
+
+const geojson = await fetchGeoJSON("point.geojson");

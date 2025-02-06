@@ -1,6 +1,4 @@
 import ThreeView from "@navara/three";
 
-const view = new ThreeView({
-  debug: true,
-});
+const view = new ThreeView({});
 await view.init();
