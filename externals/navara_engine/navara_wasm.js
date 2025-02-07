@@ -173,27 +173,6 @@ function _assertClass(instance, klass) {
     }
 }
 
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_export_2.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
-}
-
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    const mem = getDataViewMemory0();
-    for (let i = 0; i < array.length; i++) {
-        mem.setUint32(ptr + 4 * i, addToExternrefTable0(array[i]), true);
-    }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
-}
-
 function passArray8ToWasm0(arg, malloc) {
     const ptr = malloc(arg.length * 1, 1) >>> 0;
     getUint8ArrayMemory0().set(arg, ptr / 1);
@@ -235,6 +214,27 @@ function passArrayF32ToWasm0(arg, malloc) {
 
 export function start() {
     wasm.start();
+}
+
+function getArrayJsValueFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    const mem = getDataViewMemory0();
+    const result = [];
+    for (let i = ptr; i < ptr + 4 * len; i += 4) {
+        result.push(wasm.__wbindgen_export_2.get(mem.getUint32(i, true)));
+    }
+    wasm.__externref_drop_slice(ptr, len);
+    return result;
+}
+
+function passArrayJsValueToWasm0(array, malloc) {
+    const ptr = malloc(array.length * 4, 4) >>> 0;
+    const mem = getDataViewMemory0();
+    for (let i = 0; i < array.length; i++) {
+        mem.setUint32(ptr + 4 * i, addToExternrefTable0(array[i]), true);
+    }
+    WASM_VECTOR_LEN = array.length;
+    return ptr;
 }
 
 function getArrayF32FromWasm0(ptr, len) {
@@ -4512,6 +4512,19 @@ export class PolygonMaterial {
         wasm.__wbg_set_modelmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
+     * @returns {boolean | undefined}
+     */
+    get use_ground_normals() {
+        const ret = wasm.__wbg_get_modelmaterial_should_rotate_in_default(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @param {boolean | undefined} [arg0]
+     */
+    set use_ground_normals(arg0) {
+        wasm.__wbg_set_modelmaterial_should_rotate_in_default(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
      * @returns {number | undefined}
      */
     get height() {
@@ -4541,14 +4554,14 @@ export class PolygonMaterial {
      * @returns {boolean | undefined}
      */
     get wireframe() {
-        const ret = wasm.__wbg_get_modelmaterial_should_rotate_in_default(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_pointmaterial_depth_test(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | undefined} [arg0]
      */
     set wireframe(arg0) {
-        wasm.__wbg_set_modelmaterial_should_rotate_in_default(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {PolygonInternalMaterial | undefined}
@@ -4572,18 +4585,19 @@ export class PolygonMaterial {
      * @param {boolean | undefined} [show]
      * @param {number | undefined} [color]
      * @param {boolean | undefined} [clamp_to_ground]
+     * @param {boolean | undefined} [use_ground_normals]
      * @param {number | undefined} [height]
      * @param {number | undefined} [extruded_height]
      * @param {boolean | undefined} [wireframe]
      * @param {PolygonInternalMaterial | undefined} [__internal__]
      */
-    constructor(show, color, clamp_to_ground, height, extruded_height, wireframe, __internal__) {
+    constructor(show, color, clamp_to_ground, use_ground_normals, height, extruded_height, wireframe, __internal__) {
         let ptr0 = 0;
         if (!isLikeNone(__internal__)) {
             _assertClass(__internal__, PolygonInternalMaterial);
             ptr0 = __internal__.__destroy_into_raw();
         }
-        const ret = wasm.polygonmaterial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(extruded_height) ? 0x100000001 : Math.fround(extruded_height), isLikeNone(wireframe) ? 0xFFFFFF : wireframe ? 1 : 0, ptr0);
+        const ret = wasm.polygonmaterial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(use_ground_normals) ? 0xFFFFFF : use_ground_normals ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(extruded_height) ? 0x100000001 : Math.fround(extruded_height), isLikeNone(wireframe) ? 0xFFFFFF : wireframe ? 1 : 0, ptr0);
         this.__wbg_ptr = ret >>> 0;
         PolygonMaterialFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -5046,6 +5060,19 @@ export class PolylineMaterial {
         wasm.__wbg_set_modelmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
+     * @returns {boolean | undefined}
+     */
+    get use_ground_normals() {
+        const ret = wasm.__wbg_get_modelmaterial_should_rotate_in_default(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @param {boolean | undefined} [arg0]
+     */
+    set use_ground_normals(arg0) {
+        wasm.__wbg_set_modelmaterial_should_rotate_in_default(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
      * @returns {number | undefined}
      */
     get height() {
@@ -5080,17 +5107,18 @@ export class PolylineMaterial {
      * @param {boolean | undefined} [show]
      * @param {number | undefined} [color]
      * @param {boolean | undefined} [clamp_to_ground]
+     * @param {boolean | undefined} [use_ground_normals]
      * @param {number | undefined} [height]
      * @param {number | undefined} [width]
      * @param {PolylineInternalMaterial | undefined} [__internal__]
      */
-    constructor(show, color, clamp_to_ground, height, width, __internal__) {
+    constructor(show, color, clamp_to_ground, use_ground_normals, height, width, __internal__) {
         let ptr0 = 0;
         if (!isLikeNone(__internal__)) {
             _assertClass(__internal__, PolylineInternalMaterial);
             ptr0 = __internal__.__destroy_into_raw();
         }
-        const ret = wasm.polylinematerial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(width) ? 0x100000001 : Math.fround(width), ptr0);
+        const ret = wasm.polylinematerial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(use_ground_normals) ? 0xFFFFFF : use_ground_normals ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(width) ? 0x100000001 : Math.fround(width), ptr0);
         this.__wbg_ptr = ret >>> 0;
         PolylineMaterialFinalization.register(this, this.__wbg_ptr, this);
         return this;
