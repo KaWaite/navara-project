@@ -21,7 +21,7 @@ export default defineConfig({
         return {
           name: page,
           filename: `${page}.html`,
-          entry: resolve(__dirname, `src/pages/${page}/main.ts`),
+          entry: `/src/pages/${page}/main.ts`,
           data: {
             title: page,
           },
