@@ -1463,8 +1463,11 @@ export class Core {
     start() {
         wasm.core_start(this.__wbg_ptr);
     }
-    update() {
-        wasm.core_update(this.__wbg_ptr);
+    /**
+     * @param {number} updated_at
+     */
+    update(updated_at) {
+        wasm.core_update(this.__wbg_ptr, updated_at);
     }
     /**
      * @returns {Events | undefined}

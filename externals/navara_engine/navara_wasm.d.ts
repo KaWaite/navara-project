@@ -141,7 +141,7 @@ export class Core {
   free(): void;
   constructor(id: string);
   start(): void;
-  update(): void;
+  update(updated_at: number): void;
   readEvents(): Events | undefined;
   input(input: any): void;
   getBufferU8(handle: number): Uint8Array | undefined;
@@ -932,7 +932,7 @@ export interface InitOutput {
   readonly __wbg_set_core_id: (a: number, b: number, c: number) => void;
   readonly core_new: (a: number, b: number) => number;
   readonly core_start: (a: number) => void;
-  readonly core_update: (a: number) => void;
+  readonly core_update: (a: number, b: number) => void;
   readonly core_readEvents: (a: number) => number;
   readonly core_input: (a: number, b: any) => void;
   readonly core_getBufferU8: (a: number, b: number) => any;
