@@ -2,6 +2,7 @@
   "name": "navara-delveloper-workshop",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite --port 8080",
     "build": "tsc && vite build",
@@ -9,13 +10,19 @@
   },
   "dependencies": {
     "@navara/engine": "./externals/navara_engine",
-    "@navara/engine-worker": "./externals/navara_engine_worker",
     "@navara/engine-api": "./externals/navara_engine_api",
+    "@navara/engine-worker": "./externals/navara_engine_worker",
     "@navara/three": "./externals/navara_three",
+    "@navara/three_react": "./externals/navara_three_react",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "three": "^0.171.0"
   },
   "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "@types/three": "^0.172.0",
+    "@vitejs/plugin-react": "^5.0.4",
     "typescript": "~5.6.2",
     "vite": "^5.4.11",
     "vite-plugin-virtual-mpa": "^1.12.1"

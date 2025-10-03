@@ -3,6 +3,7 @@ import path, { resolve } from "path";
 
 import { defineConfig } from "vite";
 import { createMpaPlugin, Page } from "vite-plugin-virtual-mpa";
+import react from '@vitejs/plugin-react';
 
 const pages = readdirSync(resolve(__dirname, "src/pages"));
 
@@ -15,6 +16,7 @@ export default defineConfig({
       ),
   },
   plugins: [
+    react(),
     createMpaPlugin({
       template: "template.html",
       pages: pages.map((page) => {
