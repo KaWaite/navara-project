@@ -8,8 +8,8 @@ view.addLayer({
   data: {
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   },
-  raster_tile: {
-    max_zoom: 23,
+  rasterTile: {
+    maxZoom: 23,
   },
 });
 
@@ -18,7 +18,7 @@ view.addLayer({
   data: {
     url: "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png",
   },
-  raster_terrain: {
-    elevation_decoder: JAPAN_GSI_ELEVATION_DECODER(),
+  rasterTerrain: {
+    elevationDecoder: JAPAN_GSI_ELEVATION_DECODER(),
   },
 });

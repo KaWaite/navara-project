@@ -9,8 +9,8 @@ view.addLayer({
   data: {
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   },
-  raster_tile: {
-    max_zoom: 23,
+  rasterTile: {
+    maxZoom: 23,
   },
 });
 

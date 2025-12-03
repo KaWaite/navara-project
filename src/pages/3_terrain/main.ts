@@ -1,4 +1,4 @@
-import ThreeView from "@navara/three";
+import ThreeView, { JAPAN_GSI_ELEVATION_DECODER } from "@navara/three";
 
 const view = new ThreeView({});
 await view.init();
@@ -8,7 +8,18 @@ view.addLayer({
   data: {
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   },
-  raster_tile: {
-    max_zoom: 23,
+  rasterTile: {
+    maxZoom: 23,
   },
 });
+view.addLayer({
+      type: "terrain",
+      data: { url: "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png" },
+      rasterTerrain: {
+        minZoom: 6,
+        maxZoom: 15,
+        elevationDecoder: JAPAN_GSI_ELEVATION_DECODER(),
+        castShadow: true,
+        receiveShadow: true,
+      },
+    });

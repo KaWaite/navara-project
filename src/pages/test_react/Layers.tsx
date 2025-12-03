@@ -17,7 +17,7 @@ export const Layers: FC = () => {
     () => ({
       type: "tiles",
       data: { url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg" },
-      raster_tile: { min_zoom: 2, max_zoom: 18 },
+      rasterTile: { minZoom: 2, maxZoom: 18 },
     }),
     [],
   );
@@ -26,12 +26,12 @@ export const Layers: FC = () => {
     () => ({
       type: "terrain",
       data: { url: "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png" },
-      raster_terrain: {
-        min_zoom: 6,
-        max_zoom: 15,
-        elevation_decoder: JAPAN_GSI_ELEVATION_DECODER(),
-        cast_shadow: true,
-        receive_shadow: true,
+      rasterTerrain: {
+        minZoom: 6,
+        maxZoom: 15,
+        elevationDecoder: JAPAN_GSI_ELEVATION_DECODER(),
+        castShadow: true,
+        receiveShadow: true,
       },
     }),
     [],
@@ -45,12 +45,11 @@ export const Layers: FC = () => {
       },
       model: {
         show: true,
-        id_property: "gml_id",
         color: 0xffffff,
         metalness: 0,
         roughness: 1,
-        cast_shadow: true,
-        receive_shadow: true,
+        castShadow: true,
+        receiveShadow: true,
         height: -50,
       },
     }),
@@ -65,12 +64,11 @@ export const Layers: FC = () => {
       },
       model: {
         show: true,
-        id_property: "gml_id",
         color: 0xffffff,
         metalness: 0,
         roughness: 1,
-        cast_shadow: true,
-        receive_shadow: true,
+        castShadow: true,
+        receiveShadow: true,
         height: -50,
       },
     }),
