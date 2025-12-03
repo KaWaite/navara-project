@@ -5,5 +5,5 @@
   "private": true,
   "main": "pkg/index.umd.cjs",
   "module": "pkg/index.js",
-  "types": "pkg/src/index.d.ts"
+  "types": "pkg/index.d.ts"
 }

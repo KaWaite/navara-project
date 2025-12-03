@@ -1,0 +1,51 @@
+import { ShaderMaterial, type Camera, type ShaderMaterialParameters, type Texture } from "three";
+export type ConeTracingMaterialParameters = {
+    colorBuffer?: Texture | null;
+    rayTracingBuffer?: Texture | null;
+    normalBuffer?: Texture | null;
+    specularBuffer?: Texture | null;
+    indirectSpecularBuffer?: Texture | null;
+    numMips?: number;
+    fadeStart?: number;
+    fadeEnd?: number;
+    maxDistance?: number;
+    iteration?: number;
+    ior?: number;
+} & ShaderMaterialParameters;
+export declare const coneTracingMaterialParametersDefaults: {
+    numMips: number;
+    fadeStart: number;
+    fadeEnd: number;
+    maxDistance: number;
+    iteration: number;
+    ior: number;
+};
+export declare class ConeTracingMaterial extends ShaderMaterial {
+    constructor(params?: ConeTracingMaterialParameters);
+    setSize(width: number, height: number): void;
+    copyCameraSettings(camera?: Camera | null): void;
+    get depthBuffer(): Texture | null;
+    set depthBuffer(value: Texture | null);
+    get colorBuffer(): Texture | null;
+    set colorBuffer(value: Texture | null);
+    get inputBuffer(): Texture | null;
+    set inputBuffer(value: Texture | null);
+    get rayTracingBuffer(): Texture | null;
+    set rayTracingBuffer(value: Texture | null);
+    get normalBuffer(): Texture | null;
+    set normalBuffer(value: Texture | null);
+    get specularBuffer(): Texture | null;
+    set specularBuffer(value: Texture | null);
+    get indirectSpecularBuffer(): Texture | null;
+    set indirectSpecularBuffer(value: Texture | null);
+    get fadeStart(): number;
+    set fadeStart(value: number);
+    get fadeEnd(): number;
+    set fadeEnd(value: number);
+    get maxDistance(): number;
+    set maxDistance(value: number);
+    get iteration(): number;
+    set iteration(value: number);
+    get ior(): number;
+    set ior(value: number);
+}

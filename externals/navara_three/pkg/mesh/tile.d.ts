@@ -1,0 +1,43 @@
+import { type TileHandle, type EventHandler } from "@navara/core";
+import type { MeshAdded, MeshChanged, Globe } from "@navara/engine";
+import { BufferGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, Texture, WebGLRenderTarget } from "three";
+import { type ViewEvents } from "..";
+import { type BufferLoader, type TileHandler } from "../event";
+import type { CustomObject3DEventMap } from "../object3DEvent";
+import type { Scenes, TexturizedSceneByTileCoordinates } from "../scene";
+import type { TextureOptions } from "../textures";
+import type { MeshCache, TileMapByHandle } from "../type";
+import type { CommonUniforms } from "../uniforms";
+import type { PickableMesh } from "./pickableMesh";
+export type TileMaterial = MeshBasicMaterial | MeshLambertMaterial;
+export declare class TileMesh extends Mesh<BufferGeometry, TileMaterial, CustomObject3DEventMap> implements PickableMesh {
+    handle: TileHandle;
+    tileHandler: TileHandler;
+    maxTextures: number;
+    texturizedSceneIndexFrom: number;
+    numTexturizedVector: number;
+    tileStates?: {
+        parentHandle?: TileHandle;
+        isRendered: boolean;
+        layerId: string;
+    }[];
+    private texturizedSceneByTileCoordinates;
+    private texturizedScenes;
+    private camera;
+    texturizedSceneRenderTargets: WebGLRenderTarget[];
+    constructor(mesh: MeshAdded, texturizedSceneByTileCoordinates: TexturizedSceneByTileCoordinates, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle, tileHandler: TileHandler);
+    private updateTexturizedSceneByTileState;
+    private _onBeforeRender;
+    _init(scenes: Scenes, meshes: MeshCache, mesh: MeshAdded, buf: BufferLoader, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle, viewEvents: EventHandler<ViewEvents>, uniforms: CommonUniforms): Promise<void>;
+    private createMesh;
+    private initMaterial;
+    _update(mesh: MeshChanged, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle, globe: Globe): void;
+    private _setupSceneObserver;
+    private updateTexturizedSceneTextureVisibility;
+    private loadWaterTexture;
+    private setUniforms;
+    private setupTextureFragments;
+    private setupTextures;
+    _setPickable(pickable: boolean): void;
+    dispose(viewEvents: EventHandler<ViewEvents>): void;
+}

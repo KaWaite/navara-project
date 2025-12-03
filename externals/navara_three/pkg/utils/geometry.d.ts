@@ -1,0 +1,4 @@
+import { BufferGeometry } from "three";
+export type BufferGeometryLike = Pick<BufferGeometry, "attributes" | "index" | "boundingBox" | "boundingSphere">;
+export declare function toBufferGeometryLike(geometry: BufferGeometry): [BufferGeometryLike, ArrayBuffer[]];
+export declare function fromBufferGeometryLike(input: BufferGeometryLike, result?: BufferGeometry<import("three").NormalBufferAttributes, import("three").BufferGeometryEventMap>): BufferGeometry;

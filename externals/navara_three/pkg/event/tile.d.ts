@@ -1,0 +1,11 @@
+import type { EventHandler } from "@navara/core";
+import { type MeshAdded, MeshChanged } from "@navara/engine";
+import { Texture } from "three";
+import type { ViewEvents } from "..";
+import type { Scenes, TexturizedSceneByTileCoordinates } from "../scene";
+import type { TextureOptions } from "../textures";
+import type { MeshCache, TileMapByHandle } from "../type";
+import type { CommonUniforms } from "../uniforms";
+import type { BufferLoader, TileHandler } from ".";
+export declare function processMeshAdded(scenes: Scenes, meshes: MeshCache, mesh: MeshAdded, buf: BufferLoader, tileHandler: TileHandler, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, texturizedSceneByTileCoordinates: TexturizedSceneByTileCoordinates, tileMapByHandle: TileMapByHandle, viewEvents: EventHandler<ViewEvents>, uniforms: CommonUniforms): Promise<void>;
+export declare function processMeshChanged(meshes: MeshCache, mesh: MeshChanged, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle): void;

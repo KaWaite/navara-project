@@ -64,6 +64,20 @@ function getArrayF32FromWasm0(ptr, len) {
     return getFloat32ArrayMemory0().subarray(ptr / 4, ptr / 4 + len);
 }
 
+let cachedFloat64ArrayMemory0 = null;
+
+function getFloat64ArrayMemory0() {
+    if (cachedFloat64ArrayMemory0 === null || cachedFloat64ArrayMemory0.byteLength === 0) {
+        cachedFloat64ArrayMemory0 = new Float64Array(wasm.memory.buffer);
+    }
+    return cachedFloat64ArrayMemory0;
+}
+
+function getArrayF64FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
+}
+
 let cachedUint32ArrayMemory0 = null;
 
 function getUint32ArrayMemory0() {
@@ -217,6 +231,27 @@ function _assertClass(instance, klass) {
         throw new Error(`expected instance of ${klass.name}`);
     }
 }
+
+function getArrayJsValueFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    const mem = getDataViewMemory0();
+    const result = [];
+    for (let i = ptr; i < ptr + 4 * len; i += 4) {
+        result.push(wasm.__wbindgen_export_2.get(mem.getUint32(i, true)));
+    }
+    wasm.__externref_drop_slice(ptr, len);
+    return result;
+}
+
+function passArrayJsValueToWasm0(array, malloc) {
+    const ptr = malloc(array.length * 4, 4) >>> 0;
+    for (let i = 0; i < array.length; i++) {
+        const add = addToExternrefTable0(array[i]);
+        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
+    }
+    WASM_VECTOR_LEN = array.length;
+    return ptr;
+}
 /**
  * @param {bigint} child
  * @param {bigint} parent
@@ -248,15 +283,11 @@ function passArrayF32ToWasm0(arg, malloc) {
     return ptr;
 }
 
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_export_2.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
+function passArrayF64ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 8, 8) >>> 0;
+    getFloat64ArrayMemory0().set(arg, ptr / 8);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
 }
 /**
  * @returns {string}
@@ -278,15 +309,6 @@ export function start() {
     wasm.start();
 }
 
-function passArrayJsValueToWasm0(array, malloc) {
-    const ptr = malloc(array.length * 4, 4) >>> 0;
-    for (let i = 0; i < array.length; i++) {
-        const add = addToExternrefTable0(array[i]);
-        getDataViewMemory0().setUint32(ptr + 4 * i, add, true);
-    }
-    WASM_VECTOR_LEN = array.length;
-    return ptr;
-}
 /**
  * Coordinate reference system
  * @enum {0 | 1}
@@ -331,6 +353,77 @@ export const TextureFragmentStatus = Object.freeze({
     Fail: 1, "1": "Fail",
     Pending: 2, "2": "Pending",
 });
+
+const AabbFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_aabb_free(ptr >>> 0, 1));
+
+export class Aabb {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(Aabb.prototype);
+        obj.__wbg_ptr = ptr;
+        AabbFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        AabbFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_aabb_free(ptr, 0);
+    }
+    /**
+     * @returns {Vec3}
+     */
+    get center() {
+        const ret = wasm.__wbg_get_aabb_center(this.__wbg_ptr);
+        return Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3} arg0
+     */
+    set center(arg0) {
+        _assertClass(arg0, Vec3);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_aabb_center(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {Vec3}
+     */
+    get extent() {
+        const ret = wasm.__wbg_get_aabb_extent(this.__wbg_ptr);
+        return Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3} arg0
+     */
+    set extent(arg0) {
+        _assertClass(arg0, Vec3);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_aabb_extent(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @param {Vec3} center
+     * @param {Vec3} extent
+     */
+    constructor(center, extent) {
+        _assertClass(center, Vec3);
+        var ptr0 = center.__destroy_into_raw();
+        _assertClass(extent, Vec3);
+        var ptr1 = extent.__destroy_into_raw();
+        const ret = wasm.aabb_new(ptr0, ptr1);
+        this.__wbg_ptr = ret >>> 0;
+        AabbFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+}
 
 const B3dmLayerDescriptionFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
@@ -419,6 +512,66 @@ export class B3dmLayerDescription {
             ptr0 = arg0.__destroy_into_raw();
         }
         wasm.__wbg_set_b3dmlayerdescription_model(this.__wbg_ptr, ptr0);
+    }
+}
+
+const BatchPropResultFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_batchpropresult_free(ptr >>> 0, 1));
+
+export class BatchPropResult {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(BatchPropResult.prototype);
+        obj.__wbg_ptr = ptr;
+        BatchPropResultFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BatchPropResultFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_batchpropresult_free(ptr, 0);
+    }
+    /**
+     * @returns {any}
+     */
+    get properties() {
+        const ret = wasm.__wbg_get_batchpropresult_properties(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {any} arg0
+     */
+    set properties(arg0) {
+        wasm.__wbg_set_batchpropresult_properties(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {string | undefined}
+     */
+    get layerId() {
+        const ret = wasm.__wbg_get_batchpropresult_layerId(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v1;
+    }
+    /**
+     * @param {string | null} [arg0]
+     */
+    set layerId(arg0) {
+        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_batchpropresult_layerId(this.__wbg_ptr, ptr0, len0);
     }
 }
 
@@ -540,41 +693,41 @@ export class BillboardMaterial {
     /**
      * @returns {boolean | undefined}
      */
-    get scale_by_distance() {
-        const ret = wasm.__wbg_get_billboardmaterial_scale_by_distance(this.__wbg_ptr);
+    get scaleByDistance() {
+        const ret = wasm.__wbg_get_billboardmaterial_scaleByDistance(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set scale_by_distance(arg0) {
-        wasm.__wbg_set_billboardmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set scaleByDistance(arg0) {
+        wasm.__wbg_set_billboardmaterial_scaleByDistance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_billboardmaterial_clamp_to_ground(this.__wbg_ptr);
+    get clampToGround() {
+        const ret = wasm.__wbg_get_billboardmaterial_clampToGround(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_billboardmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set clampToGround(arg0) {
+        wasm.__wbg_set_billboardmaterial_clampToGround(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get depth_test() {
-        const ret = wasm.__wbg_get_billboardmaterial_depth_test(this.__wbg_ptr);
+    get depthTest() {
+        const ret = wasm.__wbg_get_billboardmaterial_depthTest(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set depth_test(arg0) {
-        wasm.__wbg_set_billboardmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set depthTest(arg0) {
+        wasm.__wbg_set_billboardmaterial_depthTest(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
@@ -592,35 +745,15 @@ export class BillboardMaterial {
     /**
      * @returns {number | undefined}
      */
-    get alpha_test() {
-        const ret = wasm.__wbg_get_billboardmaterial_alpha_test(this.__wbg_ptr);
+    get alphaTest() {
+        const ret = wasm.__wbg_get_billboardmaterial_alphaTest(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set alpha_test(arg0) {
-        wasm.__wbg_set_billboardmaterial_alpha_test(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
-    }
-    /**
-     * @returns {string | undefined}
-     */
-    get id_property() {
-        const ret = wasm.__wbg_get_billboardmaterial_id_property(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
-    }
-    /**
-     * @param {string | null} [arg0]
-     */
-    set id_property(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_billboardmaterial_id_property(this.__wbg_ptr, ptr0, len0);
+    set alphaTest(arg0) {
+        wasm.__wbg_set_billboardmaterial_alphaTest(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
 }
 
@@ -706,6 +839,97 @@ export class BillboardMesh {
      */
     set active(arg0) {
         wasm.__wbg_set_billboardmesh_active(this.__wbg_ptr, arg0);
+    }
+}
+
+const BoundingSphereFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_boundingsphere_free(ptr >>> 0, 1));
+
+export class BoundingSphere {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(BoundingSphere.prototype);
+        obj.__wbg_ptr = ptr;
+        BoundingSphereFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BoundingSphereFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_boundingsphere_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get center_x() {
+        const ret = wasm.__wbg_get_boundingsphere_center_x(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set center_x(arg0) {
+        wasm.__wbg_set_boundingsphere_center_x(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get center_y() {
+        const ret = wasm.__wbg_get_boundingsphere_center_y(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set center_y(arg0) {
+        wasm.__wbg_set_boundingsphere_center_y(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get center_z() {
+        const ret = wasm.__wbg_get_boundingsphere_center_z(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set center_z(arg0) {
+        wasm.__wbg_set_boundingsphere_center_z(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get radius() {
+        const ret = wasm.__wbg_get_boundingsphere_radius(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set radius(arg0) {
+        wasm.__wbg_set_boundingsphere_radius(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} center_x
+     * @param {number} center_y
+     * @param {number} center_z
+     * @param {number} radius
+     */
+    constructor(center_x, center_y, center_z, radius) {
+        const ret = wasm.boundingsphere_new(center_x, center_y, center_z, radius);
+        this.__wbg_ptr = ret >>> 0;
+        BoundingSphereFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
 }
 
@@ -796,6 +1020,196 @@ export class CachedMeshHandle {
         const ret = wasm.cachedmeshhandle_new(vertices, indices, uvs, isLikeNone(heights) ? 0x100000001 : (heights) >> 0);
         this.__wbg_ptr = ret >>> 0;
         CachedMeshHandleFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+}
+
+const CameraControlUpdateEventFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_cameracontrolupdateevent_free(ptr >>> 0, 1));
+/**
+ * An event for updating camera controller settings at runtime.
+ *
+ * This event allows partial updates to the [`CameraController`](navara_camera::CameraController)
+ * component. Only fields set to `Some` will be applied; `None` fields are ignored.
+ */
+export class CameraControlUpdateEvent {
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        CameraControlUpdateEventFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_cameracontrolupdateevent_free(ptr, 0);
+    }
+    /**
+     * Whether to automatically adjust near/far clipping planes based on camera distance
+     * from the Earth surface. When enabled, the camera uses three zones:
+     * - Near ground: near = 1.0, far = 1e6
+     * - Mid altitude: near = 100.0, far = 1e8
+     * - Far/Space: near = 1000.0, far = 1e9
+     *
+     * Default: `true`
+     * @returns {boolean | undefined}
+     */
+    get autoAdjustNearFar() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_autoAdjustNearFar(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * Whether to automatically adjust near/far clipping planes based on camera distance
+     * from the Earth surface. When enabled, the camera uses three zones:
+     * - Near ground: near = 1.0, far = 1e6
+     * - Mid altitude: near = 100.0, far = 1e8
+     * - Far/Space: near = 1000.0, far = 1e9
+     *
+     * Default: `true`
+     * @param {boolean | null} [arg0]
+     */
+    set autoAdjustNearFar(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_autoAdjustNearFar(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * The minimum distance (in meters) the camera can zoom in to the Earth surface.
+     *
+     * Default: `WGS84_B_64` (Earth's semi-minor axis, ~6,356,752 meters)
+     * @returns {number | undefined}
+     */
+    get minimumZoomDistance() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_minimumZoomDistance(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * The minimum distance (in meters) the camera can zoom in to the Earth surface.
+     *
+     * Default: `WGS84_B_64` (Earth's semi-minor axis, ~6,356,752 meters)
+     * @param {number | null} [arg0]
+     */
+    set minimumZoomDistance(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_minimumZoomDistance(this.__wbg_ptr, !isLikeNone(arg0), isLikeNone(arg0) ? 0 : arg0);
+    }
+    /**
+     * The maximum distance (in meters) the camera can zoom out from the Earth surface.
+     *
+     * Default: `WGS84_B_64 * 10.0` (~63,567,523 meters)
+     * @returns {number | undefined}
+     */
+    get maximumZoomDistance() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_maximumZoomDistance(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * The maximum distance (in meters) the camera can zoom out from the Earth surface.
+     *
+     * Default: `WGS84_B_64 * 10.0` (~63,567,523 meters)
+     * @param {number | null} [arg0]
+     */
+    set maximumZoomDistance(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_maximumZoomDistance(this.__wbg_ptr, !isLikeNone(arg0), isLikeNone(arg0) ? 0 : arg0);
+    }
+    /**
+     * Multiplier for mouse drag rotation speed.
+     *
+     * Default: `2.0`
+     * @returns {number | undefined}
+     */
+    get spinSpeed() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_spinSpeed(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * Multiplier for mouse drag rotation speed.
+     *
+     * Default: `2.0`
+     * @param {number | null} [arg0]
+     */
+    set spinSpeed(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_spinSpeed(this.__wbg_ptr, !isLikeNone(arg0), isLikeNone(arg0) ? 0 : arg0);
+    }
+    /**
+     * Multiplier for scroll wheel zoom speed.
+     *
+     * Default: `0.6`
+     * @returns {number | undefined}
+     */
+    get zoomSpeed() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_zoomSpeed(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * Multiplier for scroll wheel zoom speed.
+     *
+     * Default: `0.6`
+     * @param {number | null} [arg0]
+     */
+    set zoomSpeed(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_zoomSpeed(this.__wbg_ptr, !isLikeNone(arg0), isLikeNone(arg0) ? 0 : arg0);
+    }
+    /**
+     * Duration (in milliseconds) for spin inertia animation after releasing mouse drag.
+     *
+     * Default: `500.0`
+     * @returns {number | undefined}
+     */
+    get spinDuration() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_spinDuration(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * Duration (in milliseconds) for spin inertia animation after releasing mouse drag.
+     *
+     * Default: `500.0`
+     * @param {number | null} [arg0]
+     */
+    set spinDuration(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_spinDuration(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    }
+    /**
+     * Duration (in milliseconds) for zoom inertia animation after scroll wheel input.
+     *
+     * Default: `100.0`
+     * @returns {number | undefined}
+     */
+    get zoomDuration() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_zoomDuration(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * Duration (in milliseconds) for zoom inertia animation after scroll wheel input.
+     *
+     * Default: `100.0`
+     * @param {number | null} [arg0]
+     */
+    set zoomDuration(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_zoomDuration(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    }
+    /**
+     * Duration (in milliseconds) for translation inertia animation.
+     *
+     * Default: `500.0`
+     * @returns {number | undefined}
+     */
+    get translateDuration() {
+        const ret = wasm.__wbg_get_cameracontrolupdateevent_translateDuration(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * Duration (in milliseconds) for translation inertia animation.
+     *
+     * Default: `500.0`
+     * @param {number | null} [arg0]
+     */
+    set translateDuration(arg0) {
+        wasm.__wbg_set_cameracontrolupdateevent_translateDuration(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    }
+    constructor() {
+        const ret = wasm.cameracontrolupdateevent_new();
+        this.__wbg_ptr = ret >>> 0;
+        CameraControlUpdateEventFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
 }
@@ -1144,6 +1558,24 @@ export class ConstructPolygonBatchedFeatureParameters {
     set flat(arg0) {
         wasm.__wbg_set_constructpolygonbatchedfeatureparameters_flat(this.__wbg_ptr, arg0);
     }
+    /**
+     * @returns {ExtentRadianF32 | undefined}
+     */
+    get tile_extent() {
+        const ret = wasm.__wbg_get_constructpolygonbatchedfeatureparameters_tile_extent(this.__wbg_ptr);
+        return ret === 0 ? undefined : ExtentRadianF32.__wrap(ret);
+    }
+    /**
+     * @param {ExtentRadianF32 | null} [arg0]
+     */
+    set tile_extent(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, ExtentRadianF32);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_constructpolygonbatchedfeatureparameters_tile_extent(this.__wbg_ptr, ptr0);
+    }
 }
 
 const ConstructPolygonBatchedFeatureResultFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -1205,10 +1637,31 @@ export class ConstructPolygonBatchedFeatureResult {
         wasm.__wbg_set_constructpolygonbatchedfeatureresult_extent(this.__wbg_ptr, ptr0);
     }
     /**
+     * RTC (Relative-To-Center) translation vector
+     * @returns {Vec3 | undefined}
+     */
+    get rtc_translation() {
+        const ret = wasm.__wbg_get_constructpolygonbatchedfeatureresult_rtc_translation(this.__wbg_ptr);
+        return ret === 0 ? undefined : Vec3.__wrap(ret);
+    }
+    /**
+     * RTC (Relative-To-Center) translation vector
+     * @param {Vec3 | null} [arg0]
+     */
+    set rtc_translation(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec3);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_constructpolygonbatchedfeatureresult_rtc_translation(this.__wbg_ptr, ptr0);
+    }
+    /**
      * @param {TransferablePolygonGeometry} geometry
      * @param {ExtentRadianF32 | null} [extent]
+     * @param {Vec3 | null} [rtc_translation]
      */
-    constructor(geometry, extent) {
+    constructor(geometry, extent, rtc_translation) {
         _assertClass(geometry, TransferablePolygonGeometry);
         var ptr0 = geometry.__destroy_into_raw();
         let ptr1 = 0;
@@ -1216,7 +1669,12 @@ export class ConstructPolygonBatchedFeatureResult {
             _assertClass(extent, ExtentRadianF32);
             ptr1 = extent.__destroy_into_raw();
         }
-        const ret = wasm.constructpolygonbatchedfeatureresult_new(ptr0, ptr1);
+        let ptr2 = 0;
+        if (!isLikeNone(rtc_translation)) {
+            _assertClass(rtc_translation, Vec3);
+            ptr2 = rtc_translation.__destroy_into_raw();
+        }
+        const ret = wasm.constructpolygonbatchedfeatureresult_new(ptr0, ptr1, ptr2);
         this.__wbg_ptr = ret >>> 0;
         ConstructPolygonBatchedFeatureResultFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -1252,7 +1710,7 @@ export class ConstructPolylineBatchedFeatureParameters {
      * @returns {ReconstructableEntity}
      */
     get batched_feature() {
-        const ret = wasm.__wbg_get_constructpolygonbatchedfeatureparameters_batched_feature(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_constructpolylinebatchedfeatureparameters_batched_feature(this.__wbg_ptr);
         return ReconstructableEntity.__wrap(ret);
     }
     /**
@@ -1261,7 +1719,27 @@ export class ConstructPolylineBatchedFeatureParameters {
     set batched_feature(arg0) {
         _assertClass(arg0, ReconstructableEntity);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_constructpolygonbatchedfeatureparameters_batched_feature(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_constructpolylinebatchedfeatureparameters_batched_feature(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {boolean}
+     */
+    get flat() {
+        const ret = wasm.__wbg_get_constructpolylinebatchedfeatureparameters_flat(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @param {boolean} arg0
+     */
+    set flat(arg0) {
+        wasm.__wbg_set_constructpolylinebatchedfeatureparameters_flat(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {ExtentRadianF32 | undefined}
+     */
+    get tile_extent() {
+        const ret = wasm.constructpolylinebatchedfeatureparameters_tile_extent(this.__wbg_ptr);
+        return ret === 0 ? undefined : ExtentRadianF32.__wrap(ret);
     }
 }
 
@@ -1306,33 +1784,28 @@ export class ConstructPolylineBatchedFeatureResult {
         wasm.__wbg_set_constructpolylinebatchedfeatureresult_geometry(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {ExtentRadianF32}
-     */
-    get extent() {
-        const ret = wasm.__wbg_get_constructpolylinebatchedfeatureresult_extent(this.__wbg_ptr);
-        return ExtentRadianF32.__wrap(ret);
-    }
-    /**
-     * @param {ExtentRadianF32} arg0
-     */
-    set extent(arg0) {
-        _assertClass(arg0, ExtentRadianF32);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_constructpolylinebatchedfeatureresult_extent(this.__wbg_ptr, ptr0);
-    }
-    /**
      * @param {TransferablePolylineGeometry} geometry
-     * @param {ExtentRadianF32} extent
+     * @param {ExtentRadianF32 | null} [extent]
      */
     constructor(geometry, extent) {
         _assertClass(geometry, TransferablePolylineGeometry);
         var ptr0 = geometry.__destroy_into_raw();
-        _assertClass(extent, ExtentRadianF32);
-        var ptr1 = extent.__destroy_into_raw();
+        let ptr1 = 0;
+        if (!isLikeNone(extent)) {
+            _assertClass(extent, ExtentRadianF32);
+            ptr1 = extent.__destroy_into_raw();
+        }
         const ret = wasm.constructpolylinebatchedfeatureresult_new(ptr0, ptr1);
         this.__wbg_ptr = ret >>> 0;
         ConstructPolylineBatchedFeatureResultFinalization.register(this, this.__wbg_ptr, this);
         return this;
+    }
+    /**
+     * @returns {ExtentRadianF32 | undefined}
+     */
+    get extent() {
+        const ret = wasm.constructpolylinebatchedfeatureresult_extent(this.__wbg_ptr);
+        return ret === 0 ? undefined : ExtentRadianF32.__wrap(ret);
     }
 }
 
@@ -1482,15 +1955,39 @@ export class ConstructTerrainMeshResult {
         wasm.__wbg_set_constructterrainmeshresult_max_height(this.__wbg_ptr, arg0);
     }
     /**
+     * @returns {Vec3 | undefined}
+     */
+    get rtc_translation() {
+        const ret = wasm.__wbg_get_constructterrainmeshresult_rtc_translation(this.__wbg_ptr);
+        return ret === 0 ? undefined : Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3 | null} [arg0]
+     */
+    set rtc_translation(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec3);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_constructterrainmeshresult_rtc_translation(this.__wbg_ptr, ptr0);
+    }
+    /**
      * @param {TransferableGeometry} geometry
      * @param {number} heights
      * @param {number} min_height
      * @param {number} max_height
+     * @param {Vec3 | null} [rtc_translation]
      */
-    constructor(geometry, heights, min_height, max_height) {
+    constructor(geometry, heights, min_height, max_height, rtc_translation) {
         _assertClass(geometry, TransferableGeometry);
         var ptr0 = geometry.__destroy_into_raw();
-        const ret = wasm.constructterrainmeshresult_new(ptr0, heights, min_height, max_height);
+        let ptr1 = 0;
+        if (!isLikeNone(rtc_translation)) {
+            _assertClass(rtc_translation, Vec3);
+            ptr1 = rtc_translation.__destroy_into_raw();
+        }
+        const ret = wasm.constructterrainmeshresult_new(ptr0, heights, min_height, max_height, ptr1);
         this.__wbg_ptr = ret >>> 0;
         ConstructTerrainMeshResultFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -1533,18 +2030,70 @@ export class ConstructedPolygonGeometry {
         wasm.__wbg_set_constructedpolygongeometry_extent(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {Float32Array}
+     * RTC (Relative-To-Center) translation vector
+     * Contains the tile center in world-space ECEF coordinates
+     * Used to position the mesh while keeping vertex positions in local space
+     * @returns {Vec3 | undefined}
+     */
+    get rtc_translation() {
+        const ret = wasm.__wbg_get_constructedpolygongeometry_rtc_translation(this.__wbg_ptr);
+        return ret === 0 ? undefined : Vec3.__wrap(ret);
+    }
+    /**
+     * RTC (Relative-To-Center) translation vector
+     * Contains the tile center in world-space ECEF coordinates
+     * Used to position the mesh while keeping vertex positions in local space
+     * @param {Vec3 | null} [arg0]
+     */
+    set rtc_translation(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec3);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_constructedpolygongeometry_rtc_translation(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    position_3d_high() {
+        const ret = wasm.constructedpolygongeometry_position_3d_high(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    position_3d_high_size() {
+        const ret = wasm.constructedpolygongeometry_position_3d_high_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    position_3d_low() {
+        const ret = wasm.constructedpolygongeometry_position_3d_low(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    position_3d_low_size() {
+        const ret = wasm.constructedpolygongeometry_position_3d_low_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
      */
     position() {
         const ret = wasm.constructedpolygongeometry_position(this.__wbg_ptr);
         return ret;
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     position_size() {
         const ret = wasm.constructedpolygongeometry_position_size(this.__wbg_ptr);
-        return ret;
+        return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
      * @returns {Float32Array | undefined}
@@ -1629,19 +2178,11 @@ export class ConstructedPolylineGeometry {
         wasm.__wbg_constructedpolylinegeometry_free(ptr, 0);
     }
     /**
-     * @returns {ExtentRadianF32}
+     * @returns {ExtentRadianF32 | undefined}
      */
     get extent() {
-        const ret = wasm.__wbg_get_constructedpolylinegeometry_extent(this.__wbg_ptr);
-        return ExtentRadianF32.__wrap(ret);
-    }
-    /**
-     * @param {ExtentRadianF32} arg0
-     */
-    set extent(arg0) {
-        _assertClass(arg0, ExtentRadianF32);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_constructedpolylinegeometry_extent(this.__wbg_ptr, ptr0);
+        const ret = wasm.constructedpolylinegeometry_extent(this.__wbg_ptr);
+        return ret === 0 ? undefined : ExtentRadianF32.__wrap(ret);
     }
     /**
      * @returns {Float32Array}
@@ -1863,6 +2404,14 @@ export class Core {
     }
     /**
      * @param {number} handle
+     * @returns {Float64Array | undefined}
+     */
+    getBufferF64(handle) {
+        const ret = wasm.core_getBufferF64(this.__wbg_ptr, handle);
+        return ret;
+    }
+    /**
+     * @param {number} handle
      * @param {bigint} bits
      * @param {number} byte_length
      * @param {Function} f
@@ -1895,6 +2444,15 @@ export class Core {
      */
     newBufferF32(byte_length, f) {
         const ret = wasm.core_newBufferF32(this.__wbg_ptr, byte_length, f);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number} byte_length
+     * @param {Function} f
+     * @returns {number | undefined}
+     */
+    newBufferF64(byte_length, f) {
+        const ret = wasm.core_newBufferF64(this.__wbg_ptr, byte_length, f);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
@@ -1955,6 +2513,14 @@ export class Core {
      */
     removeBufferF32(handle) {
         const ret = wasm.core_removeBufferF32(this.__wbg_ptr, handle);
+        return ret;
+    }
+    /**
+     * @param {number} handle
+     * @returns {Float64Array | undefined}
+     */
+    removeBufferF64(handle) {
+        const ret = wasm.core_removeBufferF64(this.__wbg_ptr, handle);
         return ret;
     }
     /**
@@ -2113,24 +2679,11 @@ export class Core {
     }
     /**
      * @param {number} batch_id
-     * @returns {any}
+     * @returns {BatchPropResult}
      */
     getBatchProp(batch_id) {
         const ret = wasm.core_getBatchProp(this.__wbg_ptr, batch_id);
-        return ret;
-    }
-    /**
-     * @param {number} batch_id
-     * @returns {Uint32Array}
-     */
-    getPickedBatchIds(batch_id) {
-        const ret = wasm.core_getPickedBatchIds(this.__wbg_ptr, batch_id);
-        var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        return v1;
-    }
-    clearPickingStatus() {
-        wasm.core_clearPickingStatus(this.__wbg_ptr);
+        return BatchPropResult.__wrap(ret);
     }
     /**
      * @param {bigint} renderable_feature_bits
@@ -2140,15 +2693,15 @@ export class Core {
         wasm.core_readPropertiesFromFeature(this.__wbg_ptr, renderable_feature_bits, callback);
     }
     /**
-     * @param {Float32Array | null} [position]
+     * @param {Float64Array | null} [position]
      * @param {number | null} [pitch]
      * @param {number | null} [heading]
      * @param {number | null} [roll]
      */
     changeCamera(position, pitch, heading, roll) {
-        var ptr0 = isLikeNone(position) ? 0 : passArrayF32ToWasm0(position, wasm.__wbindgen_malloc);
+        var ptr0 = isLikeNone(position) ? 0 : passArrayF64ToWasm0(position, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.core_changeCamera(this.__wbg_ptr, ptr0, len0, isLikeNone(pitch) ? 0x100000001 : Math.fround(pitch), isLikeNone(heading) ? 0x100000001 : Math.fround(heading), isLikeNone(roll) ? 0x100000001 : Math.fround(roll));
+        wasm.core_changeCamera(this.__wbg_ptr, ptr0, len0, !isLikeNone(pitch), isLikeNone(pitch) ? 0 : pitch, !isLikeNone(heading), isLikeNone(heading) ? 0 : heading, !isLikeNone(roll), isLikeNone(roll) ? 0 : roll);
     }
     /**
      * @param {CameraDirection} direction
@@ -2158,16 +2711,16 @@ export class Core {
         wasm.core_moveCamera(this.__wbg_ptr, direction, amount);
     }
     /**
-     * @param {Float32Array} direction
+     * @param {Float64Array} direction
      * @param {number} amount
      */
     moveCameraWithDirection(direction, amount) {
-        const ptr0 = passArrayF32ToWasm0(direction, wasm.__wbindgen_malloc);
+        const ptr0 = passArrayF64ToWasm0(direction, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.core_moveCameraWithDirection(this.__wbg_ptr, ptr0, len0, amount);
     }
     /**
-     * @param {Float32Array | null} [position]
+     * @param {Float64Array | null} [position]
      * @param {number | null} [pitch]
      * @param {number | null} [heading]
      * @param {number | null} [roll]
@@ -2175,20 +2728,32 @@ export class Core {
      * @param {number | null} [max_height]
      */
     flyTo(position, pitch, heading, roll, duration, max_height) {
-        var ptr0 = isLikeNone(position) ? 0 : passArrayF32ToWasm0(position, wasm.__wbindgen_malloc);
+        var ptr0 = isLikeNone(position) ? 0 : passArrayF64ToWasm0(position, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.core_flyTo(this.__wbg_ptr, ptr0, len0, isLikeNone(pitch) ? 0x100000001 : Math.fround(pitch), isLikeNone(heading) ? 0x100000001 : Math.fround(heading), isLikeNone(roll) ? 0x100000001 : Math.fround(roll), isLikeNone(duration) ? 0x100000001 : Math.fround(duration), isLikeNone(max_height) ? 0x100000001 : Math.fround(max_height));
+        wasm.core_flyTo(this.__wbg_ptr, ptr0, len0, !isLikeNone(pitch), isLikeNone(pitch) ? 0 : pitch, !isLikeNone(heading), isLikeNone(heading) ? 0 : heading, !isLikeNone(roll), isLikeNone(roll) ? 0 : roll, !isLikeNone(duration), isLikeNone(duration) ? 0 : duration, !isLikeNone(max_height), isLikeNone(max_height) ? 0 : max_height);
     }
     /**
-     * @param {Float32Array} target
-     * @param {Float32Array} offset
+     * @param {Float64Array} target
+     * @param {Float64Array} offset
      */
     lookAt(target, offset) {
-        const ptr0 = passArrayF32ToWasm0(target, wasm.__wbindgen_malloc);
+        const ptr0 = passArrayF64ToWasm0(target, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passArrayF32ToWasm0(offset, wasm.__wbindgen_malloc);
+        const ptr1 = passArrayF64ToWasm0(offset, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
         wasm.core_lookAt(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+    }
+    /**
+     * @param {boolean} enabled
+     * @param {Float64Array | null} [target]
+     * @param {Float64Array | null} [offset]
+     */
+    cameraFollow(enabled, target, offset) {
+        var ptr0 = isLikeNone(target) ? 0 : passArrayF64ToWasm0(target, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        var ptr1 = isLikeNone(offset) ? 0 : passArrayF64ToWasm0(offset, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        wasm.core_cameraFollow(this.__wbg_ptr, enabled, ptr0, len0, ptr1, len1);
     }
     /**
      * @returns {CameraStatus | undefined}
@@ -2198,26 +2763,26 @@ export class Core {
         return ret === 0 ? undefined : CameraStatus.__wrap(ret);
     }
     /**
-     * @returns {Float32Array | undefined}
+     * @returns {Float64Array | undefined}
      */
     getCameraPositionLLE() {
         const ret = wasm.core_getCameraPositionLLE(this.__wbg_ptr);
         let v1;
         if (ret[0] !== 0) {
-            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+            v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
         }
         return v1;
     }
     /**
-     * @returns {Float32Array | undefined}
+     * @returns {Float64Array | undefined}
      */
     getCameraPositionECEF() {
         const ret = wasm.core_getCameraPositionECEF(this.__wbg_ptr);
         let v1;
         if (ret[0] !== 0) {
-            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+            v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
         }
         return v1;
     }
@@ -2229,11 +2794,18 @@ export class Core {
         return ret === 0 ? undefined : CameraOrientation.__wrap(ret);
     }
     /**
-     * @param {Float32Array | null | undefined} axis
+     * @returns {number | undefined}
+     */
+    getCameraFOVY() {
+        const ret = wasm.core_getCameraFOVY(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * @param {Float64Array | null | undefined} axis
      * @param {number} angle
      */
     rotateAroundAxis(axis, angle) {
-        var ptr0 = isLikeNone(axis) ? 0 : passArrayF32ToWasm0(axis, wasm.__wbindgen_malloc);
+        var ptr0 = isLikeNone(axis) ? 0 : passArrayF64ToWasm0(axis, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
         wasm.core_rotateAroundAxis(this.__wbg_ptr, ptr0, len0, angle);
     }
@@ -2245,7 +2817,7 @@ export class Core {
         _assertClass(lle, LLE);
         var ptr0 = lle.__destroy_into_raw();
         const ret = wasm.core_sampleTerrainHeight(this.__wbg_ptr, ptr0);
-        return ret === 0x100000001 ? undefined : ret;
+        return ret[0] === 0 ? undefined : ret[1];
     }
     /**
      * @param {LLE} lle
@@ -2269,7 +2841,146 @@ export class Core {
      * @param {number | null} [far]
      */
     setFrustum(fov, near, far) {
-        wasm.core_setFrustum(this.__wbg_ptr, isLikeNone(fov) ? 0x100000001 : Math.fround(fov), isLikeNone(near) ? 0x100000001 : Math.fround(near), isLikeNone(far) ? 0x100000001 : Math.fround(far));
+        wasm.core_setFrustum(this.__wbg_ptr, !isLikeNone(fov), isLikeNone(fov) ? 0 : fov, !isLikeNone(near), isLikeNone(near) ? 0 : near, !isLikeNone(far), isLikeNone(far) ? 0 : far);
+    }
+    /**
+     * @param {CameraControlUpdateEvent} event
+     */
+    setCameraControl(event) {
+        _assertClass(event, CameraControlUpdateEvent);
+        var ptr0 = event.__destroy_into_raw();
+        wasm.core_setCameraControl(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {Globe | undefined}
+     */
+    getGlobe() {
+        const ret = wasm.core_getGlobe(this.__wbg_ptr);
+        return ret === 0 ? undefined : Globe.__wrap(ret);
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    getGlobeTransparent() {
+        const ret = wasm.core_getGlobeTransparent(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    getGlobeMaxSse() {
+        const ret = wasm.core_getGlobeMaxSse(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    getGlobeSegments() {
+        const ret = wasm.core_getGlobeSegments(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    getGlobeColor() {
+        const ret = wasm.core_getGlobeColor(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    getGlobeHideUnderground() {
+        const ret = wasm.core_getGlobeHideUnderground(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    getGlobeShouldComputeNormalFromVertex() {
+        const ret = wasm.core_getGlobeShouldComputeNormalFromVertex(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    getGlobeOpacity() {
+        const ret = wasm.core_getGlobeOpacity(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    getGlobeWireframe() {
+        const ret = wasm.core_getGlobeWireframe(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    getGlobeElevationColormap() {
+        const ret = wasm.core_getGlobeElevationColormap(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        }
+        return v1;
+    }
+    /**
+     * @param {boolean} value
+     */
+    setGlobeTransparent(value) {
+        wasm.core_setGlobeTransparent(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {number} value
+     */
+    setGlobeMaxSse(value) {
+        wasm.core_setGlobeMaxSse(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {number} value
+     */
+    setGlobeSegments(value) {
+        wasm.core_setGlobeSegments(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {number} value
+     */
+    setGlobeColor(value) {
+        wasm.core_setGlobeColor(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {boolean} value
+     */
+    setGlobeHideUnderground(value) {
+        wasm.core_setGlobeHideUnderground(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {boolean} value
+     */
+    setGlobeShouldComputeNormalFromVertex(value) {
+        wasm.core_setGlobeShouldComputeNormalFromVertex(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {number} value
+     */
+    setGlobeOpacity(value) {
+        wasm.core_setGlobeOpacity(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {boolean} value
+     */
+    setGlobeWireframe(value) {
+        wasm.core_setGlobeWireframe(this.__wbg_ptr, value);
+    }
+    /**
+     * @param {Float32Array} value
+     */
+    setGlobeElevationColormap(value) {
+        const ptr0 = passArrayF32ToWasm0(value, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.core_setGlobeElevationColormap(this.__wbg_ptr, ptr0, len0);
     }
 }
 
@@ -2942,6 +3653,110 @@ export class ElevationDecoder {
         const ret = wasm.elevationdecoder_mapbox();
         return ElevationDecoder.__wrap(ret);
     }
+    /**
+     * @returns {ElevationDecoder}
+     */
+    static terrarium() {
+        const ret = wasm.elevationdecoder_terrarium();
+        return ElevationDecoder.__wrap(ret);
+    }
+}
+
+const ElevationHeatmapMaterialFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_elevationheatmapmaterial_free(ptr >>> 0, 1));
+
+export class ElevationHeatmapMaterial {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(ElevationHeatmapMaterial.prototype);
+        obj.__wbg_ptr = ptr;
+        ElevationHeatmapMaterialFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        ElevationHeatmapMaterialFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_elevationheatmapmaterial_free(ptr, 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get maxHeight() {
+        const ret = wasm.__wbg_get_elevationheatmapmaterial_maxHeight(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set maxHeight(arg0) {
+        wasm.__wbg_set_elevationheatmapmaterial_maxHeight(this.__wbg_ptr, !isLikeNone(arg0), isLikeNone(arg0) ? 0 : arg0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get minHeight() {
+        const ret = wasm.__wbg_get_elevationheatmapmaterial_minHeight(this.__wbg_ptr);
+        return ret[0] === 0 ? undefined : ret[1];
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set minHeight(arg0) {
+        wasm.__wbg_set_elevationheatmapmaterial_minHeight(this.__wbg_ptr, !isLikeNone(arg0), isLikeNone(arg0) ? 0 : arg0);
+    }
+    /**
+     * @returns {ElevationDecoder | undefined}
+     */
+    get elevationDecoder() {
+        const ret = wasm.__wbg_get_elevationheatmapmaterial_elevationDecoder(this.__wbg_ptr);
+        return ret === 0 ? undefined : ElevationDecoder.__wrap(ret);
+    }
+    /**
+     * @param {ElevationDecoder | null} [arg0]
+     */
+    set elevationDecoder(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, ElevationDecoder);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_elevationheatmapmaterial_elevationDecoder(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {boolean}
+     */
+    get logarithmic() {
+        const ret = wasm.__wbg_get_elevationheatmapmaterial_logarithmic(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @param {boolean} arg0
+     */
+    set logarithmic(arg0) {
+        wasm.__wbg_set_elevationheatmapmaterial_logarithmic(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get logBoundary() {
+        const ret = wasm.__wbg_get_elevationheatmapmaterial_logBoundary(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set logBoundary(arg0) {
+        wasm.__wbg_set_elevationheatmapmaterial_logBoundary(this.__wbg_ptr, arg0);
+    }
 }
 
 const EllipsoidGeodesicFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -3049,7 +3864,7 @@ export class EllipsoidGeodesic {
      * @returns {LLE[]}
      */
     interpolateGeodeticPoints(granularity) {
-        const ret = wasm.ellipsoidgeodesic_interpolateGeodeticPoints(this.__wbg_ptr, isLikeNone(granularity) ? 0x100000001 : Math.fround(granularity));
+        const ret = wasm.ellipsoidgeodesic_interpolateGeodeticPoints(this.__wbg_ptr, !isLikeNone(granularity), isLikeNone(granularity) ? 0 : granularity);
         var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
@@ -3061,6 +3876,161 @@ export class EllipsoidGeodesic {
     interpolateDistance(distance) {
         const ret = wasm.ellipsoidgeodesic_interpolateDistance(this.__wbg_ptr, distance);
         return LLE.__wrap(ret);
+    }
+}
+
+const EllipsoidTerrainMaterialFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_ellipsoidterrainmaterial_free(ptr >>> 0, 1));
+
+export class EllipsoidTerrainMaterial {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(EllipsoidTerrainMaterial.prototype);
+        obj.__wbg_ptr = ptr;
+        EllipsoidTerrainMaterialFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        EllipsoidTerrainMaterialFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_ellipsoidterrainmaterial_free(ptr, 0);
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    get castShadow() {
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_castShadow(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @param {boolean | null} [arg0]
+     */
+    set castShadow(arg0) {
+        wasm.__wbg_set_ellipsoidterrainmaterial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_receiveShadow(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @param {boolean | null} [arg0]
+     */
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_ellipsoidterrainmaterial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {boolean | undefined}
+     */
+    get showBoundingBox() {
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_showBoundingBox(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * @param {boolean | null} [arg0]
+     */
+    set showBoundingBox(arg0) {
+        wasm.__wbg_set_ellipsoidterrainmaterial_showBoundingBox(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get maxZoom() {
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set maxZoom(arg0) {
+        wasm.__wbg_set_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get minZoom() {
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_minZoom(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set minZoom(arg0) {
+        wasm.__wbg_set_ellipsoidterrainmaterial_minZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    }
+}
+
+const EncodedVec3Finalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_encodedvec3_free(ptr >>> 0, 1));
+
+export class EncodedVec3 {
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        EncodedVec3Finalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_encodedvec3_free(ptr, 0);
+    }
+    /**
+     * @returns {Vec3}
+     */
+    get high() {
+        const ret = wasm.__wbg_get_encodedvec3_high(this.__wbg_ptr);
+        return Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3} arg0
+     */
+    set high(arg0) {
+        _assertClass(arg0, Vec3);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_encodedvec3_high(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {Vec3}
+     */
+    get low() {
+        const ret = wasm.__wbg_get_encodedvec3_low(this.__wbg_ptr);
+        return Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3} arg0
+     */
+    set low(arg0) {
+        _assertClass(arg0, Vec3);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_encodedvec3_low(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @param {Vec3} high
+     * @param {Vec3} low
+     */
+    constructor(high, low) {
+        _assertClass(high, Vec3);
+        var ptr0 = high.__destroy_into_raw();
+        _assertClass(low, Vec3);
+        var ptr1 = low.__destroy_into_raw();
+        const ret = wasm.encodedvec3_new(ptr0, ptr1);
+        this.__wbg_ptr = ret >>> 0;
+        EncodedVec3Finalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
 }
 
@@ -3804,6 +4774,200 @@ export class Geometry {
     }
 }
 
+const GlobeFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_globe_free(ptr >>> 0, 1));
+/**
+ * WASM wrapper for Globe resource.
+ *
+ * This provides a JavaScript-friendly interface for accessing and modifying
+ * globe configuration properties.
+ */
+export class Globe {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(Globe.prototype);
+        obj.__wbg_ptr = ptr;
+        GlobeFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        GlobeFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_globe_free(ptr, 0);
+    }
+    /**
+     * Screen-space error threshold for level of detail (LOD) calculations. Initialization only.
+     * @returns {number}
+     */
+    get maxSse() {
+        const ret = wasm.__wbg_get_globe_maxSse(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * Screen-space error threshold for level of detail (LOD) calculations. Initialization only.
+     * @param {number} arg0
+     */
+    set maxSse(arg0) {
+        wasm.__wbg_set_globe_maxSse(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Number of segments for mesh tessellation. Initialization only.
+     * @returns {number}
+     */
+    get segments() {
+        const ret = wasm.__wbg_get_globe_segments(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * Number of segments for mesh tessellation. Initialization only.
+     * @param {number} arg0
+     */
+    set segments(arg0) {
+        wasm.__wbg_set_globe_segments(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Base color for the globe surface (RGB as u32).
+     * @returns {number}
+     */
+    get color() {
+        const ret = wasm.__wbg_get_globe_color(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * Base color for the globe surface (RGB as u32).
+     * @param {number} arg0
+     */
+    set color(arg0) {
+        wasm.__wbg_set_globe_color(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Whether to hide underground geometry. Disabling this value might cause unexpected behavior when using effect layer.
+     * @returns {boolean}
+     */
+    get hideUnderground() {
+        const ret = wasm.__wbg_get_globe_hideUnderground(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * Whether to hide underground geometry. Disabling this value might cause unexpected behavior when using effect layer.
+     * @param {boolean} arg0
+     */
+    set hideUnderground(arg0) {
+        wasm.__wbg_set_globe_hideUnderground(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Whether to compute normals from vertex positions. Initialization only.
+     * @returns {boolean}
+     */
+    get shouldComputeNormalFromVertex() {
+        const ret = wasm.__wbg_get_globe_shouldComputeNormalFromVertex(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * Whether to compute normals from vertex positions. Initialization only.
+     * @param {boolean} arg0
+     */
+    set shouldComputeNormalFromVertex(arg0) {
+        wasm.__wbg_set_globe_shouldComputeNormalFromVertex(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Whether materials should be transparent.
+     * Note that blending works only for resource layer.
+     * @returns {boolean}
+     */
+    get transparent() {
+        const ret = wasm.__wbg_get_globe_transparent(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * Whether materials should be transparent.
+     * Note that blending works only for resource layer.
+     * @param {boolean} arg0
+     */
+    set transparent(arg0) {
+        wasm.__wbg_set_globe_transparent(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Global opacity for materials (0.0 to 1.0).
+     * @returns {number}
+     */
+    get opacity() {
+        const ret = wasm.__wbg_get_globe_opacity(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * Global opacity for materials (0.0 to 1.0).
+     * @param {number} arg0
+     */
+    set opacity(arg0) {
+        wasm.__wbg_set_globe_opacity(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Whether to render materials in wireframe mode.
+     * @returns {boolean}
+     */
+    get wireframe() {
+        const ret = wasm.__wbg_get_globe_wireframe(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * Whether to render materials in wireframe mode.
+     * @param {boolean} arg0
+     */
+    set wireframe(arg0) {
+        wasm.__wbg_set_globe_wireframe(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Color map lookup table for elevation heatmap rendering.
+     * Flattened RGB array: [r0,g0,b0, r1,g1,b1, ...].
+     * @returns {Float32Array}
+     */
+    get elevationColormap() {
+        const ret = wasm.__wbg_get_globe_elevationColormap(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * Color map lookup table for elevation heatmap rendering.
+     * Flattened RGB array: [r0,g0,b0, r1,g1,b1, ...].
+     * @param {Float32Array} arg0
+     */
+    set elevationColormap(arg0) {
+        const ptr0 = passArrayF32ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_globe_elevationColormap(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {number} max_sse
+     * @param {number} segments
+     * @param {number} color
+     * @param {boolean} hide_underground
+     * @param {boolean} should_compute_normal_from_vertex
+     * @param {boolean} transparent
+     * @param {number} opacity
+     * @param {boolean} wireframe
+     * @param {Float32Array} elevation_colormap
+     */
+    constructor(max_sse, segments, color, hide_underground, should_compute_normal_from_vertex, transparent, opacity, wireframe, elevation_colormap) {
+        const ptr0 = passArrayF32ToWasm0(elevation_colormap, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.globe_new(max_sse, segments, color, hide_underground, should_compute_normal_from_vertex, transparent, opacity, wireframe, ptr0, len0);
+        this.__wbg_ptr = ret >>> 0;
+        GlobeFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+}
+
 const LLEFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_lle_free(ptr >>> 0, 1));
@@ -4023,27 +5187,27 @@ export class Mesh {
      * @returns {number}
      */
     get vertices() {
-        const ret = wasm.__wbg_get_entityevent_ind(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_mesh_vertices(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set vertices(arg0) {
-        wasm.__wbg_set_entityevent_ind(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_mesh_vertices(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get uvs() {
-        const ret = wasm.__wbg_get_entityevent_gen(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_mesh_uvs(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set uvs(arg0) {
-        wasm.__wbg_set_entityevent_gen(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_mesh_uvs(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
@@ -4098,6 +5262,21 @@ export class Mesh {
         _assertClass(arg0, TileUvTransform);
         var ptr0 = arg0.__destroy_into_raw();
         wasm.__wbg_set_mesh_uv_transform(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {Aabb}
+     */
+    get aabb() {
+        const ret = wasm.__wbg_get_mesh_aabb(this.__wbg_ptr);
+        return Aabb.__wrap(ret);
+    }
+    /**
+     * @param {Aabb} arg0
+     */
+    set aabb(arg0) {
+        _assertClass(arg0, Aabb);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_mesh_aabb(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -4230,6 +5409,21 @@ export class MeshAdded {
         var ptr0 = arg0.__destroy_into_raw();
         wasm.__wbg_set_meshadded_transform(this.__wbg_ptr, ptr0);
     }
+    /**
+     * @returns {Globe}
+     */
+    get globe() {
+        const ret = wasm.__wbg_get_meshadded_globe(this.__wbg_ptr);
+        return Globe.__wrap(ret);
+    }
+    /**
+     * @param {Globe} arg0
+     */
+    set globe(arg0) {
+        _assertClass(arg0, Globe);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_meshadded_globe(this.__wbg_ptr, ptr0);
+    }
 }
 
 const MeshChangedFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -4307,7 +5501,7 @@ export class MeshChanged {
      * @returns {Mesh}
      */
     get mesh() {
-        const ret = wasm.__wbg_get_meshchanged_mesh(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_meshadded_mesh(this.__wbg_ptr);
         return Mesh.__wrap(ret);
     }
     /**
@@ -4316,13 +5510,13 @@ export class MeshChanged {
     set mesh(arg0) {
         _assertClass(arg0, Mesh);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_meshchanged_mesh(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_meshadded_mesh(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {RasterTileInternalMaterial}
      */
     get material() {
-        const ret = wasm.__wbg_get_meshchanged_material(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_meshadded_material(this.__wbg_ptr);
         return RasterTileInternalMaterial.__wrap(ret);
     }
     /**
@@ -4331,7 +5525,90 @@ export class MeshChanged {
     set material(arg0) {
         _assertClass(arg0, RasterTileInternalMaterial);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_meshchanged_material(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_meshadded_material(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {Globe}
+     */
+    get globe() {
+        const ret = wasm.__wbg_get_meshadded_globe(this.__wbg_ptr);
+        return Globe.__wrap(ret);
+    }
+    /**
+     * @param {Globe} arg0
+     */
+    set globe(arg0) {
+        _assertClass(arg0, Globe);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_meshadded_globe(this.__wbg_ptr, ptr0);
+    }
+}
+
+const ModelInternalMaterialFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_modelinternalmaterial_free(ptr >>> 0, 1));
+
+export class ModelInternalMaterial {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(ModelInternalMaterial.prototype);
+        obj.__wbg_ptr = ptr;
+        ModelInternalMaterialFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        ModelInternalMaterialFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_modelinternalmaterial_free(ptr, 0);
+    }
+    /**
+     * @returns {boolean}
+     */
+    get pointCloud() {
+        const ret = wasm.__wbg_get_modelinternalmaterial_pointCloud(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @param {boolean} arg0
+     */
+    set pointCloud(arg0) {
+        wasm.__wbg_set_modelinternalmaterial_pointCloud(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {boolean}
+     */
+    get dracoCompressed() {
+        const ret = wasm.__wbg_get_modelinternalmaterial_dracoCompressed(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @param {boolean} arg0
+     */
+    set dracoCompressed(arg0) {
+        wasm.__wbg_set_modelinternalmaterial_dracoCompressed(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {Vec3}
+     */
+    get pointCloudGeodeticNormal() {
+        const ret = wasm.__wbg_get_modelinternalmaterial_pointCloudGeodeticNormal(this.__wbg_ptr);
+        return Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3} arg0
+     */
+    set pointCloudGeodeticNormal(arg0) {
+        _assertClass(arg0, Vec3);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_modelinternalmaterial_pointCloudGeodeticNormal(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -4376,28 +5653,28 @@ export class ModelMaterial {
     /**
      * @returns {boolean | undefined}
      */
-    get cast_shadow() {
-        const ret = wasm.__wbg_get_modelmaterial_cast_shadow(this.__wbg_ptr);
+    get castShadow() {
+        const ret = wasm.__wbg_get_modelmaterial_castShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set cast_shadow(arg0) {
-        wasm.__wbg_set_modelmaterial_cast_shadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set castShadow(arg0) {
+        wasm.__wbg_set_modelmaterial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get receive_shadow() {
-        const ret = wasm.__wbg_get_modelmaterial_receive_shadow(this.__wbg_ptr);
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_modelmaterial_receiveShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set receive_shadow(arg0) {
-        wasm.__wbg_set_modelmaterial_receive_shadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_modelmaterial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {string | undefined}
@@ -4423,14 +5700,14 @@ export class ModelMaterial {
      * @returns {number | undefined}
      */
     get size() {
-        const ret = wasm.__wbg_get_billboardmaterial_size(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_size(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set size(arg0) {
-        wasm.__wbg_set_billboardmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_modelmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
@@ -4448,61 +5725,41 @@ export class ModelMaterial {
     /**
      * @returns {number | undefined}
      */
-    get max_sse() {
-        const ret = wasm.__wbg_get_modelmaterial_max_sse(this.__wbg_ptr);
+    get maxSse() {
+        const ret = wasm.__wbg_get_modelmaterial_maxSse(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set max_sse(arg0) {
-        wasm.__wbg_set_modelmaterial_max_sse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set maxSse(arg0) {
+        wasm.__wbg_set_modelmaterial_maxSse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_modelmaterial_clamp_to_ground(this.__wbg_ptr);
+    get clampToGround() {
+        const ret = wasm.__wbg_get_modelmaterial_clampToGround(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_modelmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set clampToGround(arg0) {
+        wasm.__wbg_set_modelmaterial_clampToGround(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get should_rotate_in_default() {
-        const ret = wasm.__wbg_get_modelmaterial_should_rotate_in_default(this.__wbg_ptr);
+    get shouldRotateInDefault() {
+        const ret = wasm.__wbg_get_modelmaterial_shouldRotateInDefault(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set should_rotate_in_default(arg0) {
-        wasm.__wbg_set_modelmaterial_should_rotate_in_default(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
-    }
-    /**
-     * @returns {string | undefined}
-     */
-    get id_property() {
-        const ret = wasm.__wbg_get_modelmaterial_id_property(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
-    }
-    /**
-     * @param {string | null} [arg0]
-     */
-    set id_property(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_modelmaterial_id_property(this.__wbg_ptr, ptr0, len0);
+    set shouldRotateInDefault(arg0) {
+        wasm.__wbg_set_modelmaterial_shouldRotateInDefault(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
@@ -4531,32 +5788,37 @@ export class ModelMaterial {
         wasm.__wbg_set_modelmaterial_metalness(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Reflectivity for post-process.
      * @returns {number | undefined}
      */
     get roughness() {
-        const ret = wasm.__wbg_get_modelmaterial_roughness(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_billboardmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Reflectivity for post-process.
      * @param {number | null} [arg0]
      */
     set roughness(arg0) {
-        wasm.__wbg_set_modelmaterial_roughness(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_billboardmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Reflectivity for post-process or env map.
      * @returns {number | undefined}
      */
     get reflectivity() {
-        const ret = wasm.__wbg_get_modelmaterial_reflectivity(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_billboardmaterial_alphaTest(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Reflectivity for post-process or env map.
      * @param {number | null} [arg0]
      */
     set reflectivity(arg0) {
-        wasm.__wbg_set_modelmaterial_reflectivity(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_billboardmaterial_alphaTest(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Apply a water material on the polygon. It might slow down the loading of the mesh.
      * @returns {boolean | undefined}
      */
     get water() {
@@ -4564,6 +5826,7 @@ export class ModelMaterial {
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
+     * Apply a water material on the polygon. It might slow down the loading of the mesh.
      * @param {boolean | null} [arg0]
      */
     set water(arg0) {
@@ -4572,8 +5835,8 @@ export class ModelMaterial {
     /**
      * @returns {string | undefined}
      */
-    get water_normal_url() {
-        const ret = wasm.__wbg_get_modelmaterial_water_normal_url(this.__wbg_ptr);
+    get waterNormalUrl() {
+        const ret = wasm.__wbg_get_modelmaterial_waterNormalUrl(this.__wbg_ptr);
         let v1;
         if (ret[0] !== 0) {
             v1 = getStringFromWasm0(ret[0], ret[1]).slice();
@@ -4584,36 +5847,40 @@ export class ModelMaterial {
     /**
      * @param {string | null} [arg0]
      */
-    set water_normal_url(arg0) {
+    set waterNormalUrl(arg0) {
         var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_modelmaterial_water_normal_url(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_modelmaterial_waterNormalUrl(this.__wbg_ptr, ptr0, len0);
     }
     /**
+     * Scale water normal. Decreasing this value will make the water surface rough.
      * @returns {number | undefined}
      */
-    get water_scale_normal() {
-        const ret = wasm.__wbg_get_modelmaterial_water_scale_normal(this.__wbg_ptr);
+    get waterScaleNormal() {
+        const ret = wasm.__wbg_get_modelmaterial_waterScaleNormal(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Scale water normal. Decreasing this value will make the water surface rough.
      * @param {number | null} [arg0]
      */
-    set water_scale_normal(arg0) {
-        wasm.__wbg_set_modelmaterial_water_scale_normal(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set waterScaleNormal(arg0) {
+        wasm.__wbg_set_modelmaterial_waterScaleNormal(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Water wave speed.
      * @returns {number | undefined}
      */
-    get water_speed() {
-        const ret = wasm.__wbg_get_modelmaterial_water_speed(this.__wbg_ptr);
+    get waterSpeed() {
+        const ret = wasm.__wbg_get_modelmaterial_waterSpeed(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Water wave speed.
      * @param {number | null} [arg0]
      */
-    set water_speed(arg0) {
-        wasm.__wbg_set_modelmaterial_water_speed(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set waterSpeed(arg0) {
+        wasm.__wbg_set_modelmaterial_waterSpeed(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
@@ -4631,67 +5898,62 @@ export class ModelMaterial {
     /**
      * @returns {number | undefined}
      */
-    get specular_strength() {
-        const ret = wasm.__wbg_get_modelmaterial_specular_strength(this.__wbg_ptr);
+    get specularStrength() {
+        const ret = wasm.__wbg_get_modelmaterial_specularStrength(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set specular_strength(arg0) {
-        wasm.__wbg_set_modelmaterial_specular_strength(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set specularStrength(arg0) {
+        wasm.__wbg_set_modelmaterial_specularStrength(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
-    get apply_water_normal() {
-        const ret = wasm.__wbg_get_modelmaterial_apply_water_normal(this.__wbg_ptr);
+    get applyWaterNormal() {
+        const ret = wasm.__wbg_get_modelmaterial_applyWaterNormal(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set apply_water_normal(arg0) {
-        wasm.__wbg_set_modelmaterial_apply_water_normal(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set applyWaterNormal(arg0) {
+        wasm.__wbg_set_modelmaterial_applyWaterNormal(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
+     * Enabling this value allows using `shininess` and `specular_strength`.
      * @returns {boolean | undefined}
      */
-    get animation_enabled() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_enabled(this.__wbg_ptr);
+    get specular() {
+        const ret = wasm.__wbg_get_modelmaterial_specular(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
+     * Enabling this value allows using `shininess` and `specular_strength`.
      * @param {boolean | null} [arg0]
      */
-    set animation_enabled(arg0) {
-        wasm.__wbg_set_modelmaterial_animation_enabled(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set specular(arg0) {
+        wasm.__wbg_set_modelmaterial_specular(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
-     * @returns {string[] | undefined}
+     * @returns {number | undefined}
      */
-    get animation_clips() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_clips(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        }
-        return v1;
+    get ior() {
+        const ret = wasm.__wbg_get_modelmaterial_ior(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {string[] | null} [arg0]
+     * @param {number | null} [arg0]
      */
-    set animation_clips(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passArrayJsValueToWasm0(arg0, wasm.__wbindgen_malloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_modelmaterial_animation_clips(this.__wbg_ptr, ptr0, len0);
+    set ior(arg0) {
+        wasm.__wbg_set_modelmaterial_ior(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {string | undefined}
      */
-    get animation_active_clip() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_active_clip(this.__wbg_ptr);
+    get animationActiveClip() {
+        const ret = wasm.__wbg_get_modelmaterial_animationActiveClip(this.__wbg_ptr);
         let v1;
         if (ret[0] !== 0) {
             v1 = getStringFromWasm0(ret[0], ret[1]).slice();
@@ -4702,62 +5964,67 @@ export class ModelMaterial {
     /**
      * @param {string | null} [arg0]
      */
-    set animation_active_clip(arg0) {
+    set animationActiveClip(arg0) {
         var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_modelmaterial_animation_active_clip(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_modelmaterial_animationActiveClip(this.__wbg_ptr, ptr0, len0);
     }
     /**
      * @returns {number | undefined}
      */
-    get animation_speed() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_speed(this.__wbg_ptr);
+    get animationSpeed() {
+        const ret = wasm.__wbg_get_modelmaterial_animationSpeed(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set animation_speed(arg0) {
-        wasm.__wbg_set_modelmaterial_animation_speed(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
-    }
-    /**
-     * @returns {boolean | undefined}
-     */
-    get animation_loop() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_loop(this.__wbg_ptr);
-        return ret === 0xFFFFFF ? undefined : ret !== 0;
-    }
-    /**
-     * @param {boolean | null} [arg0]
-     */
-    set animation_loop(arg0) {
-        wasm.__wbg_set_modelmaterial_animation_loop(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set animationSpeed(arg0) {
+        wasm.__wbg_set_modelmaterial_animationSpeed(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
-    get animation_crossfade_duration() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_crossfade_duration(this.__wbg_ptr);
+    get pointSize() {
+        const ret = wasm.__wbg_get_modelmaterial_pointSize(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set animation_crossfade_duration(arg0) {
-        wasm.__wbg_set_modelmaterial_animation_crossfade_duration(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set pointSize(arg0) {
+        wasm.__wbg_set_modelmaterial_pointSize(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
-    get animation_auto_play() {
-        const ret = wasm.__wbg_get_modelmaterial_animation_auto_play(this.__wbg_ptr);
+    get showBoundingBox() {
+        const ret = wasm.__wbg_get_modelmaterial_showBoundingBox(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set animation_auto_play(arg0) {
-        wasm.__wbg_set_modelmaterial_animation_auto_play(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set showBoundingBox(arg0) {
+        wasm.__wbg_set_modelmaterial_showBoundingBox(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {ModelInternalMaterial | undefined}
+     */
+    get __internal__() {
+        const ret = wasm.__wbg_get_modelmaterial___internal__(this.__wbg_ptr);
+        return ret === 0 ? undefined : ModelInternalMaterial.__wrap(ret);
+    }
+    /**
+     * @param {ModelInternalMaterial | null} [arg0]
+     */
+    set __internal__(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, ModelInternalMaterial);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_modelmaterial___internal__(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -4828,6 +6095,21 @@ export class ModelMesh {
      */
     set bin(arg0) {
         wasm.__wbg_set_modelmesh_bin(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >> 0);
+    }
+    /**
+     * @returns {Aabb}
+     */
+    get aabb() {
+        const ret = wasm.__wbg_get_modelmesh_aabb(this.__wbg_ptr);
+        return Aabb.__wrap(ret);
+    }
+    /**
+     * @param {Aabb} arg0
+     */
+    set aabb(arg0) {
+        _assertClass(arg0, Aabb);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_modelmesh_aabb(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableModelGeometry}
@@ -4987,7 +6269,7 @@ export class MvtLayerDescription {
      * @returns {PolylineMaterial | undefined}
      */
     get polyline() {
-        const ret = wasm.__wbg_get_geojsonlayerdescription_polyline(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_mvtlayerdescription_polyline(this.__wbg_ptr);
         return ret === 0 ? undefined : PolylineMaterial.__wrap(ret);
     }
     /**
@@ -4999,7 +6281,7 @@ export class MvtLayerDescription {
             _assertClass(arg0, PolylineMaterial);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_geojsonlayerdescription_polyline(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_mvtlayerdescription_polyline(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {PolygonMaterial | undefined}
@@ -5022,20 +6304,20 @@ export class MvtLayerDescription {
     /**
      * @returns {VectorTileMaterial | undefined}
      */
-    get vector_tile() {
-        const ret = wasm.__wbg_get_mvtlayerdescription_vector_tile(this.__wbg_ptr);
+    get vectorTile() {
+        const ret = wasm.__wbg_get_mvtlayerdescription_vectorTile(this.__wbg_ptr);
         return ret === 0 ? undefined : VectorTileMaterial.__wrap(ret);
     }
     /**
      * @param {VectorTileMaterial | null} [arg0]
      */
-    set vector_tile(arg0) {
+    set vectorTile(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, VectorTileMaterial);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_mvtlayerdescription_vector_tile(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_mvtlayerdescription_vectorTile(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -5120,27 +6402,27 @@ export class ObjectTransformEvent {
      * @returns {number}
      */
     get ind() {
-        const ret = wasm.__wbg_get_datarequestevent_gen(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_mesh_vertices(this.__wbg_ptr);
         return ret >>> 0;
     }
     /**
      * @param {number} arg0
      */
     set ind(arg0) {
-        wasm.__wbg_set_datarequestevent_gen(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_mesh_vertices(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get gen() {
-        const ret = wasm.__wbg_get_objecttransformevent_gen(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_mesh_uvs(this.__wbg_ptr);
         return ret >>> 0;
     }
     /**
      * @param {number} arg0
      */
     set gen(arg0) {
-        wasm.__wbg_set_objecttransformevent_gen(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_mesh_uvs(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {Transform}
@@ -5337,6 +6619,96 @@ export class Plane {
     }
 }
 
+const PntsLayerDescriptionFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_pntslayerdescription_free(ptr >>> 0, 1));
+
+export class PntsLayerDescription {
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PntsLayerDescriptionFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_pntslayerdescription_free(ptr, 0);
+    }
+    /**
+     * @returns {string | undefined}
+     */
+    get type() {
+        const ret = wasm.__wbg_get_pntslayerdescription_type(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v1;
+    }
+    /**
+     * @param {string | null} [arg0]
+     */
+    set type(arg0) {
+        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_b3dmlayerdescription_type(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @returns {string | undefined}
+     */
+    get crs() {
+        const ret = wasm.__wbg_get_pntslayerdescription_crs(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v1;
+    }
+    /**
+     * @param {string | null} [arg0]
+     */
+    set crs(arg0) {
+        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_b3dmlayerdescription_crs(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @returns {any}
+     */
+    get data() {
+        const ret = wasm.__wbg_get_pntslayerdescription_data(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {any} arg0
+     */
+    set data(arg0) {
+        wasm.__wbg_set_pntslayerdescription_data(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {ModelMaterial | undefined}
+     */
+    get model() {
+        const ret = wasm.__wbg_get_b3dmlayerdescription_model(this.__wbg_ptr);
+        return ret === 0 ? undefined : ModelMaterial.__wrap(ret);
+    }
+    /**
+     * @param {ModelMaterial | null} [arg0]
+     */
+    set model(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, ModelMaterial);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_b3dmlayerdescription_model(this.__wbg_ptr, ptr0);
+    }
+}
+
 const PointMaterialFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_pointmaterial_free(ptr >>> 0, 1));
@@ -5435,41 +6807,41 @@ export class PointMaterial {
     /**
      * @returns {boolean | undefined}
      */
-    get scale_by_distance() {
-        const ret = wasm.__wbg_get_pointmaterial_scale_by_distance(this.__wbg_ptr);
+    get scaleByDistance() {
+        const ret = wasm.__wbg_get_pointmaterial_scaleByDistance(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set scale_by_distance(arg0) {
-        wasm.__wbg_set_pointmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set scaleByDistance(arg0) {
+        wasm.__wbg_set_pointmaterial_scaleByDistance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_pointmaterial_clamp_to_ground(this.__wbg_ptr);
+    get clampToGround() {
+        const ret = wasm.__wbg_get_pointmaterial_clampToGround(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_pointmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set clampToGround(arg0) {
+        wasm.__wbg_set_pointmaterial_clampToGround(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get depth_test() {
-        const ret = wasm.__wbg_get_pointmaterial_depth_test(this.__wbg_ptr);
+    get depthTest() {
+        const ret = wasm.__wbg_get_pointmaterial_depthTest(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set depth_test(arg0) {
-        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set depthTest(arg0) {
+        wasm.__wbg_set_pointmaterial_depthTest(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
@@ -5483,26 +6855,6 @@ export class PointMaterial {
      */
     set transparent(arg0) {
         wasm.__wbg_set_pointmaterial_transparent(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
-    }
-    /**
-     * @returns {string | undefined}
-     */
-    get id_property() {
-        const ret = wasm.__wbg_get_pointmaterial_id_property(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
-    }
-    /**
-     * @param {string | null} [arg0]
-     */
-    set id_property(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_pointmaterial_id_property(this.__wbg_ptr, ptr0, len0);
     }
 }
 
@@ -5609,18 +6961,46 @@ export class PolygonGeometry {
         wasm.__wbg_polygongeometry_free(ptr, 0);
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float32Array | undefined}
+     */
+    position_3d_high() {
+        const ret = wasm.polygongeometry_position_3d_high(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    position_3d_high_size() {
+        const ret = wasm.polygongeometry_position_3d_high_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    position_3d_low() {
+        const ret = wasm.polygongeometry_position_3d_low(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    position_3d_low_size() {
+        const ret = wasm.polygongeometry_position_3d_low_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
      */
     position() {
         const ret = wasm.polygongeometry_position(this.__wbg_ptr);
         return ret;
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     position_size() {
         const ret = wasm.polygongeometry_position_size(this.__wbg_ptr);
-        return ret;
+        return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
      * @returns {Float32Array | undefined}
@@ -5705,18 +7085,46 @@ export class PolygonGeometryAttributes {
         wasm.__wbg_polygongeometryattributes_free(ptr, 0);
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float32Array | undefined}
+     */
+    transfer_position_3d_high() {
+        const ret = wasm.polygongeometryattributes_transfer_position_3d_high(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    transfer_position_3d_high_size() {
+        const ret = wasm.polygongeometryattributes_transfer_position_3d_high_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    transfer_position_3d_low() {
+        const ret = wasm.polygongeometryattributes_transfer_position_3d_low(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    transfer_position_3d_low_size() {
+        const ret = wasm.polygongeometryattributes_transfer_position_3d_low_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
      */
     transfer_position() {
         const ret = wasm.polygongeometryattributes_transfer_position(this.__wbg_ptr);
         return ret;
     }
     /**
-     * @returns {number}
+     * @returns {number | undefined}
      */
     transfer_position_size() {
-        const ret = wasm.polygongeometry_position_size(this.__wbg_ptr);
-        return ret;
+        const ret = wasm.polygongeometryattributes_transfer_position_size(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
      * @returns {Float32Array | undefined}
@@ -5729,7 +7137,7 @@ export class PolygonGeometryAttributes {
      * @returns {number | undefined}
      */
     transfer_normal_size() {
-        const ret = wasm.polygongeometry_normal_size(this.__wbg_ptr);
+        const ret = wasm.polygongeometryattributes_transfer_normal_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
@@ -5743,7 +7151,7 @@ export class PolygonGeometryAttributes {
      * @returns {number | undefined}
      */
     transfer_scale_normal_and_cap_size() {
-        const ret = wasm.polygongeometry_scale_normal_and_cap_size(this.__wbg_ptr);
+        const ret = wasm.polygongeometryattributes_transfer_scale_normal_and_cap_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
@@ -5757,7 +7165,7 @@ export class PolygonGeometryAttributes {
      * @returns {number | undefined}
      */
     transfer_batch_id_size() {
-        const ret = wasm.polygongeometry_batch_id_size(this.__wbg_ptr);
+        const ret = wasm.polygongeometryattributes_transfer_batch_id_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
@@ -5771,7 +7179,7 @@ export class PolygonGeometryAttributes {
      * @returns {number | undefined}
      */
     transfer_batch_index_size() {
-        const ret = wasm.polygongeometry_batch_index_size(this.__wbg_ptr);
+        const ret = wasm.polygongeometryattributes_transfer_batch_index_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
 }
@@ -5802,21 +7210,21 @@ export class PolygonInternalMaterial {
         wasm.__wbg_polygoninternalmaterial_free(ptr, 0);
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
-    get min_max_heights() {
-        const ret = wasm.__wbg_get_polygoninternalmaterial_min_max_heights(this.__wbg_ptr);
-        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    get minMaxHeights() {
+        const ret = wasm.__wbg_get_polygoninternalmaterial_minMaxHeights(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
         return v1;
     }
     /**
-     * @param {Float32Array} arg0
+     * @param {Float64Array} arg0
      */
-    set min_max_heights(arg0) {
-        const ptr0 = passArrayF32ToWasm0(arg0, wasm.__wbindgen_malloc);
+    set minMaxHeights(arg0) {
+        const ptr0 = passArrayF64ToWasm0(arg0, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_polygoninternalmaterial_min_max_heights(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_polygoninternalmaterial_minMaxHeights(this.__wbg_ptr, ptr0, len0);
     }
 }
 
@@ -5861,93 +7269,93 @@ export class PolygonMaterial {
     /**
      * @returns {boolean | undefined}
      */
-    get cast_shadow() {
-        const ret = wasm.__wbg_get_polygonmaterial_cast_shadow(this.__wbg_ptr);
+    get castShadow() {
+        const ret = wasm.__wbg_get_polygonmaterial_castShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set cast_shadow(arg0) {
-        wasm.__wbg_set_polygonmaterial_cast_shadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set castShadow(arg0) {
+        wasm.__wbg_set_polygonmaterial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get receive_shadow() {
-        const ret = wasm.__wbg_get_polygonmaterial_receive_shadow(this.__wbg_ptr);
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_polygonmaterial_receiveShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set receive_shadow(arg0) {
-        wasm.__wbg_set_polygonmaterial_receive_shadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_polygonmaterial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get color() {
-        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_polygonmaterial_clamp_to_ground(this.__wbg_ptr);
+    get clampToGround() {
+        const ret = wasm.__wbg_get_polygonmaterial_clampToGround(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_polygonmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set clampToGround(arg0) {
+        wasm.__wbg_set_polygonmaterial_clampToGround(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get use_ground_normals() {
-        const ret = wasm.__wbg_get_polygonmaterial_use_ground_normals(this.__wbg_ptr);
+    get useGroundNormals() {
+        const ret = wasm.__wbg_get_polygonmaterial_useGroundNormals(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set use_ground_normals(arg0) {
-        wasm.__wbg_set_polygonmaterial_use_ground_normals(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set useGroundNormals(arg0) {
+        wasm.__wbg_set_polygonmaterial_useGroundNormals(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get height() {
-        const ret = wasm.__wbg_get_modelmaterial_height(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set height(arg0) {
-        wasm.__wbg_set_modelmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_polygonmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
-    get extruded_height() {
-        const ret = wasm.__wbg_get_modelmaterial_max_sse(this.__wbg_ptr);
+    get extrudedHeight() {
+        const ret = wasm.__wbg_get_polygonmaterial_extrudedHeight(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set extruded_height(arg0) {
-        wasm.__wbg_set_modelmaterial_max_sse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set extrudedHeight(arg0) {
+        wasm.__wbg_set_polygonmaterial_extrudedHeight(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
@@ -5963,6 +7371,7 @@ export class PolygonMaterial {
         wasm.__wbg_set_polygonmaterial_wireframe(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
+     * Reflectivity for post-process or env map.
      * @returns {number | undefined}
      */
     get reflectivity() {
@@ -5970,23 +7379,26 @@ export class PolygonMaterial {
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Reflectivity for post-process or env map.
      * @param {number | null} [arg0]
      */
     set reflectivity(arg0) {
         wasm.__wbg_set_polygonmaterial_reflectivity(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Reflectivity for post-process.
      * @returns {number | undefined}
      */
     get roughness() {
-        const ret = wasm.__wbg_get_modelmaterial_metalness(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_roughness(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Reflectivity for post-process.
      * @param {number | null} [arg0]
      */
     set roughness(arg0) {
-        wasm.__wbg_set_modelmaterial_metalness(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_polygonmaterial_roughness(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {PolygonInternalMaterial | undefined}
@@ -6007,86 +7419,112 @@ export class PolygonMaterial {
         wasm.__wbg_set_polygonmaterial___internal__(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {string | undefined}
+     * Whether or not the height is obtained from the data. If false, the height is constant.
+     * @returns {boolean | undefined}
      */
-    get id_property() {
-        const ret = wasm.__wbg_get_polygonmaterial_id_property(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
+    get perPositionHeight() {
+        const ret = wasm.__wbg_get_polygonmaterial_perPositionHeight(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
-     * @param {string | null} [arg0]
+     * Whether or not the height is obtained from the data. If false, the height is constant.
+     * @param {boolean | null} [arg0]
      */
-    set id_property(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_polygonmaterial_id_property(this.__wbg_ptr, ptr0, len0);
+    set perPositionHeight(arg0) {
+        wasm.__wbg_set_polygonmaterial_perPositionHeight(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * Need to enable `transparent`.
+     * @returns {number | undefined}
+     */
+    get opacity() {
+        const ret = wasm.__wbg_get_polygonmaterial_opacity(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * Need to enable `transparent`.
+     * @param {number | null} [arg0]
+     */
+    set opacity(arg0) {
+        wasm.__wbg_set_polygonmaterial_opacity(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    }
+    /**
+     * Enable `opacity`. It might cause unexpected behavior when you use an effect layer.
+     * @returns {boolean | undefined}
+     */
+    get transparent() {
+        const ret = wasm.__wbg_get_polygonmaterial_transparent(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * Enable `opacity`. It might cause unexpected behavior when you use an effect layer.
+     * @param {boolean | null} [arg0]
+     */
+    set transparent(arg0) {
+        wasm.__wbg_set_polygonmaterial_transparent(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @returns {boolean | undefined}
      */
-    get surface_show() {
-        const ret = wasm.__wbg_get_polygonmaterial_surface_show(this.__wbg_ptr);
+    get surfaceShow() {
+        const ret = wasm.__wbg_get_polygonmaterial_surfaceShow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @param {boolean | null} [arg0]
      */
-    set surface_show(arg0) {
-        wasm.__wbg_set_polygonmaterial_surface_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set surfaceShow(arg0) {
+        wasm.__wbg_set_polygonmaterial_surfaceShow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @returns {boolean | undefined}
      */
-    get outline_show() {
-        const ret = wasm.__wbg_get_polygonmaterial_outline_show(this.__wbg_ptr);
+    get outlineShow() {
+        const ret = wasm.__wbg_get_polygonmaterial_outlineShow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @param {boolean | null} [arg0]
      */
-    set outline_show(arg0) {
-        wasm.__wbg_set_polygonmaterial_outline_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set outlineShow(arg0) {
+        wasm.__wbg_set_polygonmaterial_outlineShow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @returns {number | undefined}
      */
-    get outline_color() {
-        const ret = wasm.__wbg_get_polygonmaterial_outline_color(this.__wbg_ptr);
+    get outlineColor() {
+        const ret = wasm.__wbg_get_polygonmaterial_outlineColor(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @param {number | null} [arg0]
      */
-    set outline_color(arg0) {
-        wasm.__wbg_set_polygonmaterial_outline_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set outlineColor(arg0) {
+        wasm.__wbg_set_polygonmaterial_outlineColor(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @returns {number | undefined}
      */
-    get outline_width() {
-        const ret = wasm.__wbg_get_modelmaterial_reflectivity(this.__wbg_ptr);
+    get outlineWidth() {
+        const ret = wasm.__wbg_get_polygonmaterial_outlineWidth(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * Currently, this property is supported only in GeoJSON.
      * @param {number | null} [arg0]
      */
-    set outline_width(arg0) {
-        wasm.__wbg_set_modelmaterial_reflectivity(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set outlineWidth(arg0) {
+        wasm.__wbg_set_polygonmaterial_outlineWidth(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Apply a water material on the polygon. It might slow down the loading of the mesh.
      * @returns {boolean | undefined}
      */
     get water() {
@@ -6094,6 +7532,7 @@ export class PolygonMaterial {
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
+     * Apply a water material on the polygon. It might slow down the loading of the mesh.
      * @param {boolean | null} [arg0]
      */
     set water(arg0) {
@@ -6102,8 +7541,8 @@ export class PolygonMaterial {
     /**
      * @returns {string | undefined}
      */
-    get water_normal_url() {
-        const ret = wasm.__wbg_get_polygonmaterial_water_normal_url(this.__wbg_ptr);
+    get waterNormalUrl() {
+        const ret = wasm.__wbg_get_polygonmaterial_waterNormalUrl(this.__wbg_ptr);
         let v1;
         if (ret[0] !== 0) {
             v1 = getStringFromWasm0(ret[0], ret[1]).slice();
@@ -6114,75 +7553,107 @@ export class PolygonMaterial {
     /**
      * @param {string | null} [arg0]
      */
-    set water_normal_url(arg0) {
+    set waterNormalUrl(arg0) {
         var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_polygonmaterial_water_normal_url(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_polygonmaterial_waterNormalUrl(this.__wbg_ptr, ptr0, len0);
     }
     /**
+     * Scale water normal. Decreasing this value will make the water surface rough.
      * @returns {number | undefined}
      */
-    get water_scale_normal() {
-        const ret = wasm.__wbg_get_modelmaterial_water_scale_normal(this.__wbg_ptr);
+    get waterScaleNormal() {
+        const ret = wasm.__wbg_get_polygonmaterial_waterScaleNormal(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Scale water normal. Decreasing this value will make the water surface rough.
      * @param {number | null} [arg0]
      */
-    set water_scale_normal(arg0) {
-        wasm.__wbg_set_modelmaterial_water_scale_normal(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set waterScaleNormal(arg0) {
+        wasm.__wbg_set_polygonmaterial_waterScaleNormal(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Water wave speed.
      * @returns {number | undefined}
      */
-    get water_speed() {
-        const ret = wasm.__wbg_get_modelmaterial_water_speed(this.__wbg_ptr);
+    get waterSpeed() {
+        const ret = wasm.__wbg_get_polygonmaterial_waterSpeed(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Water wave speed.
      * @param {number | null} [arg0]
      */
-    set water_speed(arg0) {
-        wasm.__wbg_set_modelmaterial_water_speed(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set waterSpeed(arg0) {
+        wasm.__wbg_set_polygonmaterial_waterSpeed(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
     get shininess() {
-        const ret = wasm.__wbg_get_modelmaterial_shininess(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_shininess(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set shininess(arg0) {
-        wasm.__wbg_set_modelmaterial_shininess(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_polygonmaterial_shininess(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
-    get specular_strength() {
-        const ret = wasm.__wbg_get_modelmaterial_specular_strength(this.__wbg_ptr);
+    get specularStrength() {
+        const ret = wasm.__wbg_get_polygonmaterial_specularStrength(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set specular_strength(arg0) {
-        wasm.__wbg_set_modelmaterial_specular_strength(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set specularStrength(arg0) {
+        wasm.__wbg_set_polygonmaterial_specularStrength(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
-    get apply_water_normal() {
-        const ret = wasm.__wbg_get_polygonmaterial_apply_water_normal(this.__wbg_ptr);
+    get applyWaterNormal() {
+        const ret = wasm.__wbg_get_polygonmaterial_applyWaterNormal(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set apply_water_normal(arg0) {
-        wasm.__wbg_set_polygonmaterial_apply_water_normal(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set applyWaterNormal(arg0) {
+        wasm.__wbg_set_polygonmaterial_applyWaterNormal(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * Enabling this value allows using `shininess` and `specular_strength`.
+     * @returns {boolean | undefined}
+     */
+    get specular() {
+        const ret = wasm.__wbg_get_polygonmaterial_specular(this.__wbg_ptr);
+        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    }
+    /**
+     * Enabling this value allows using `shininess` and `specular_strength`.
+     * @param {boolean | null} [arg0]
+     */
+    set specular(arg0) {
+        wasm.__wbg_set_polygonmaterial_specular(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get ior() {
+        const ret = wasm.__wbg_get_polygonmaterial_ior(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set ior(arg0) {
+        wasm.__wbg_set_polygonmaterial_ior(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @param {boolean | null} [show]
@@ -6194,24 +7665,16 @@ export class PolygonMaterial {
      * @param {number | null} [height]
      * @param {number | null} [extruded_height]
      * @param {boolean | null} [wireframe]
-     * @param {number | null} [reflectivity]
-     * @param {number | null} [roughness]
+     * @param {boolean | null} [per_position_height]
      * @param {PolygonInternalMaterial | null} [__internal__]
-     * @param {string | null} [id_property]
-     * @param {boolean | null} [surface_show]
-     * @param {boolean | null} [outline_show]
-     * @param {number | null} [outline_color]
-     * @param {number | null} [outline_width]
      */
-    constructor(show, cast_shadow, receive_shadow, color, clamp_to_ground, use_ground_normals, height, extruded_height, wireframe, reflectivity, roughness, __internal__, id_property, surface_show, outline_show, outline_color, outline_width) {
+    constructor(show, cast_shadow, receive_shadow, color, clamp_to_ground, use_ground_normals, height, extruded_height, wireframe, per_position_height, __internal__) {
         let ptr0 = 0;
         if (!isLikeNone(__internal__)) {
             _assertClass(__internal__, PolygonInternalMaterial);
             ptr0 = __internal__.__destroy_into_raw();
         }
-        var ptr1 = isLikeNone(id_property) ? 0 : passStringToWasm0(id_property, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len1 = WASM_VECTOR_LEN;
-        const ret = wasm.polygonmaterial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(cast_shadow) ? 0xFFFFFF : cast_shadow ? 1 : 0, isLikeNone(receive_shadow) ? 0xFFFFFF : receive_shadow ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(use_ground_normals) ? 0xFFFFFF : use_ground_normals ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(extruded_height) ? 0x100000001 : Math.fround(extruded_height), isLikeNone(wireframe) ? 0xFFFFFF : wireframe ? 1 : 0, isLikeNone(reflectivity) ? 0x100000001 : Math.fround(reflectivity), isLikeNone(roughness) ? 0x100000001 : Math.fround(roughness), ptr0, ptr1, len1, isLikeNone(surface_show) ? 0xFFFFFF : surface_show ? 1 : 0, isLikeNone(outline_show) ? 0xFFFFFF : outline_show ? 1 : 0, isLikeNone(outline_color) ? 0x100000001 : (outline_color) >>> 0, isLikeNone(outline_width) ? 0x100000001 : Math.fround(outline_width));
+        const ret = wasm.polygonmaterial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(cast_shadow) ? 0xFFFFFF : cast_shadow ? 1 : 0, isLikeNone(receive_shadow) ? 0xFFFFFF : receive_shadow ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(use_ground_normals) ? 0xFFFFFF : use_ground_normals ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(extruded_height) ? 0x100000001 : Math.fround(extruded_height), isLikeNone(wireframe) ? 0xFFFFFF : wireframe ? 1 : 0, isLikeNone(per_position_height) ? 0xFFFFFF : per_position_height ? 1 : 0, ptr0);
         this.__wbg_ptr = ret >>> 0;
         PolygonMaterialFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -6319,6 +7782,43 @@ export class PolygonMesh {
     set active(arg0) {
         wasm.__wbg_set_polygonmesh_active(this.__wbg_ptr, arg0);
     }
+    /**
+     * RTC (Relative-To-Center) coordinates - tile center in world-space
+     * Used for positioning the mesh when using RTC rendering
+     * @returns {Vec3}
+     */
+    get coordinates() {
+        const ret = wasm.__wbg_get_polygonmesh_coordinates(this.__wbg_ptr);
+        return Vec3.__wrap(ret);
+    }
+    /**
+     * RTC (Relative-To-Center) coordinates - tile center in world-space
+     * Used for positioning the mesh when using RTC rendering
+     * @param {Vec3} arg0
+     */
+    set coordinates(arg0) {
+        _assertClass(arg0, Vec3);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_polygonmesh_coordinates(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {BoundingSphere | undefined}
+     */
+    get bounding_sphere() {
+        const ret = wasm.__wbg_get_polygonmesh_bounding_sphere(this.__wbg_ptr);
+        return ret === 0 ? undefined : BoundingSphere.__wrap(ret);
+    }
+    /**
+     * @param {BoundingSphere | null} [arg0]
+     */
+    set bounding_sphere(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, BoundingSphere);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_polygonmesh_bounding_sphere(this.__wbg_ptr, ptr0);
+    }
 }
 
 const PolylineGeometryFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -6349,7 +7849,7 @@ export class PolylineGeometry {
      * @returns {number}
      */
     position_size() {
-        const ret = wasm.constructedpolylinegeometry_position_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_position_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6363,7 +7863,7 @@ export class PolylineGeometry {
      * @returns {number}
      */
     start_size() {
-        const ret = wasm.constructedpolylinegeometry_start_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_start_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6377,7 +7877,7 @@ export class PolylineGeometry {
      * @returns {number}
      */
     forward_offset_size() {
-        const ret = wasm.constructedpolylinegeometry_forward_offset_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_forward_offset_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6391,7 +7891,7 @@ export class PolylineGeometry {
      * @returns {number}
      */
     start_normals_size() {
-        const ret = wasm.constructedpolylinegeometry_start_normals_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_start_normals_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6405,7 +7905,7 @@ export class PolylineGeometry {
      * @returns {number}
      */
     end_normal_and_texture_coordinate_normalization_x_size() {
-        const ret = wasm.constructedpolylinegeometry_end_normal_and_texture_coordinate_normalization_x_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_end_normal_and_texture_coordinate_normalization_x_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6419,7 +7919,7 @@ export class PolylineGeometry {
      * @returns {number}
      */
     right_normal_and_texture_coordinate_normalization_y_size() {
-        const ret = wasm.constructedpolylinegeometry_right_normal_and_texture_coordinate_normalization_y_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_right_normal_and_texture_coordinate_normalization_y_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6433,7 +7933,7 @@ export class PolylineGeometry {
      * @returns {number | undefined}
      */
     batch_id_size() {
-        const ret = wasm.constructedpolylinegeometry_batch_id_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_batch_id_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
@@ -6447,7 +7947,7 @@ export class PolylineGeometry {
      * @returns {number | undefined}
      */
     batch_index_size() {
-        const ret = wasm.constructedpolylinegeometry_batch_index_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_batch_index_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
@@ -6487,7 +7987,7 @@ export class PolylineGeometryAttributes {
      * @returns {number}
      */
     transfer_position_size() {
-        const ret = wasm.constructedpolylinegeometry_position_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_position_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6501,7 +8001,7 @@ export class PolylineGeometryAttributes {
      * @returns {number}
      */
     transfer_start_size() {
-        const ret = wasm.constructedpolylinegeometry_start_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_start_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6515,7 +8015,7 @@ export class PolylineGeometryAttributes {
      * @returns {number}
      */
     transfer_forward_offset_size() {
-        const ret = wasm.constructedpolylinegeometry_forward_offset_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_forward_offset_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6529,7 +8029,7 @@ export class PolylineGeometryAttributes {
      * @returns {number}
      */
     transfer_start_normals_size() {
-        const ret = wasm.constructedpolylinegeometry_start_normals_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_start_normals_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6543,7 +8043,7 @@ export class PolylineGeometryAttributes {
      * @returns {number}
      */
     transfer_end_normal_and_texture_coordinate_normalization_x_size() {
-        const ret = wasm.constructedpolylinegeometry_end_normal_and_texture_coordinate_normalization_x_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_end_normal_and_texture_coordinate_normalization_x_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6557,7 +8057,7 @@ export class PolylineGeometryAttributes {
      * @returns {number}
      */
     transfer_right_normal_and_texture_coordinate_normalization_y_size() {
-        const ret = wasm.constructedpolylinegeometry_right_normal_and_texture_coordinate_normalization_y_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_right_normal_and_texture_coordinate_normalization_y_size(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -6571,7 +8071,7 @@ export class PolylineGeometryAttributes {
      * @returns {number | undefined}
      */
     transfer_batch_id_size() {
-        const ret = wasm.constructedpolylinegeometry_batch_id_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_batch_id_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
     /**
@@ -6585,7 +8085,7 @@ export class PolylineGeometryAttributes {
      * @returns {number | undefined}
      */
     transfer_batch_index_size() {
-        const ret = wasm.constructedpolylinegeometry_batch_index_size(this.__wbg_ptr);
+        const ret = wasm.polylinegeometry_batch_index_size(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret;
     }
 }
@@ -6616,21 +8116,21 @@ export class PolylineInternalMaterial {
         wasm.__wbg_polylineinternalmaterial_free(ptr, 0);
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
-    get min_max_heights() {
-        const ret = wasm.__wbg_get_polylineinternalmaterial_min_max_heights(this.__wbg_ptr);
-        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    get minMaxHeights() {
+        const ret = wasm.__wbg_get_polylineinternalmaterial_minMaxHeights(this.__wbg_ptr);
+        var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
         return v1;
     }
     /**
-     * @param {Float32Array} arg0
+     * @param {Float64Array} arg0
      */
-    set min_max_heights(arg0) {
-        const ptr0 = passArrayF32ToWasm0(arg0, wasm.__wbindgen_malloc);
+    set minMaxHeights(arg0) {
+        const ptr0 = passArrayF64ToWasm0(arg0, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_polygoninternalmaterial_min_max_heights(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_polygoninternalmaterial_minMaxHeights(this.__wbg_ptr, ptr0, len0);
     }
 }
 
@@ -6663,105 +8163,105 @@ export class PolylineMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_pointmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polylinematerial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_pointmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_polylinematerial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get cast_shadow() {
-        const ret = wasm.__wbg_get_pointmaterial_scale_by_distance(this.__wbg_ptr);
+    get castShadow() {
+        const ret = wasm.__wbg_get_polylinematerial_castShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set cast_shadow(arg0) {
-        wasm.__wbg_set_pointmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set castShadow(arg0) {
+        wasm.__wbg_set_polylinematerial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get receive_shadow() {
-        const ret = wasm.__wbg_get_pointmaterial_clamp_to_ground(this.__wbg_ptr);
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_polylinematerial_receiveShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set receive_shadow(arg0) {
-        wasm.__wbg_set_pointmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_polylinematerial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get color() {
-        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
     get width() {
-        const ret = wasm.__wbg_get_modelmaterial_height(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set width(arg0) {
-        wasm.__wbg_set_modelmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_polygonmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_pointmaterial_depth_test(this.__wbg_ptr);
+    get clampToGround() {
+        const ret = wasm.__wbg_get_polylinematerial_clampToGround(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set clampToGround(arg0) {
+        wasm.__wbg_set_polylinematerial_clampToGround(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get use_ground_normals() {
-        const ret = wasm.__wbg_get_pointmaterial_transparent(this.__wbg_ptr);
+    get useGroundNormals() {
+        const ret = wasm.__wbg_get_polylinematerial_useGroundNormals(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set use_ground_normals(arg0) {
-        wasm.__wbg_set_pointmaterial_transparent(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set useGroundNormals(arg0) {
+        wasm.__wbg_set_polylinematerial_useGroundNormals(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get height() {
-        const ret = wasm.__wbg_get_modelmaterial_max_sse(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_extrudedHeight(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set height(arg0) {
-        wasm.__wbg_set_modelmaterial_max_sse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_polygonmaterial_extrudedHeight(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {PolylineInternalMaterial | undefined}
@@ -6782,26 +8282,6 @@ export class PolylineMaterial {
         wasm.__wbg_set_polylinematerial___internal__(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {string | undefined}
-     */
-    get id_property() {
-        const ret = wasm.__wbg_get_polylinematerial_id_property(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
-    }
-    /**
-     * @param {string | null} [arg0]
-     */
-    set id_property(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_pointmaterial_id_property(this.__wbg_ptr, ptr0, len0);
-    }
-    /**
      * @param {boolean | null} [show]
      * @param {boolean | null} [cast_shadow]
      * @param {boolean | null} [receive_shadow]
@@ -6811,17 +8291,14 @@ export class PolylineMaterial {
      * @param {number | null} [height]
      * @param {number | null} [width]
      * @param {PolylineInternalMaterial | null} [__internal__]
-     * @param {string | null} [id_property]
      */
-    constructor(show, cast_shadow, receive_shadow, color, clamp_to_ground, use_ground_normals, height, width, __internal__, id_property) {
+    constructor(show, cast_shadow, receive_shadow, color, clamp_to_ground, use_ground_normals, height, width, __internal__) {
         let ptr0 = 0;
         if (!isLikeNone(__internal__)) {
             _assertClass(__internal__, PolylineInternalMaterial);
             ptr0 = __internal__.__destroy_into_raw();
         }
-        var ptr1 = isLikeNone(id_property) ? 0 : passStringToWasm0(id_property, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len1 = WASM_VECTOR_LEN;
-        const ret = wasm.polylinematerial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(cast_shadow) ? 0xFFFFFF : cast_shadow ? 1 : 0, isLikeNone(receive_shadow) ? 0xFFFFFF : receive_shadow ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(use_ground_normals) ? 0xFFFFFF : use_ground_normals ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(width) ? 0x100000001 : Math.fround(width), ptr0, ptr1, len1);
+        const ret = wasm.polylinematerial_new(isLikeNone(show) ? 0xFFFFFF : show ? 1 : 0, isLikeNone(cast_shadow) ? 0xFFFFFF : cast_shadow ? 1 : 0, isLikeNone(receive_shadow) ? 0xFFFFFF : receive_shadow ? 1 : 0, isLikeNone(color) ? 0x100000001 : (color) >>> 0, isLikeNone(clamp_to_ground) ? 0xFFFFFF : clamp_to_ground ? 1 : 0, isLikeNone(use_ground_normals) ? 0xFFFFFF : use_ground_normals ? 1 : 0, isLikeNone(height) ? 0x100000001 : Math.fround(height), isLikeNone(width) ? 0x100000001 : Math.fround(width), ptr0);
         this.__wbg_ptr = ret >>> 0;
         PolylineMaterialFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -6911,6 +8388,21 @@ export class PolylineMesh {
     set active(arg0) {
         wasm.__wbg_set_polylinemesh_active(this.__wbg_ptr, arg0);
     }
+    /**
+     * Whether the polyline should be rendered as a texturized draped feature
+     * @returns {boolean}
+     */
+    get should_be_texturized() {
+        const ret = wasm.__wbg_get_polylinemesh_should_be_texturized(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * Whether the polyline should be rendered as a texturized draped feature
+     * @param {boolean} arg0
+     */
+    set should_be_texturized(arg0) {
+        wasm.__wbg_set_polylinemesh_should_be_texturized(this.__wbg_ptr, arg0);
+    }
 }
 
 const RasterTerrainMaterialFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -6942,123 +8434,125 @@ export class RasterTerrainMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_billboardmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_rasterterrainmaterial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_billboardmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_rasterterrainmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get cast_shadow() {
-        const ret = wasm.__wbg_get_billboardmaterial_scale_by_distance(this.__wbg_ptr);
+    get castShadow() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_castShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set cast_shadow(arg0) {
-        wasm.__wbg_set_billboardmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set castShadow(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get receive_shadow() {
-        const ret = wasm.__wbg_get_billboardmaterial_clamp_to_ground(this.__wbg_ptr);
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_receiveShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set receive_shadow(arg0) {
-        wasm.__wbg_set_billboardmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get segments() {
-        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set segments(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get max_zoom() {
-        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set max_zoom(arg0) {
-        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get min_zoom() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_min_zoom(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set min_zoom(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_min_zoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get wireframe() {
-        const ret = wasm.__wbg_get_billboardmaterial_depth_test(this.__wbg_ptr);
+    get showBoundingBox() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_showBoundingBox(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set wireframe(arg0) {
-        wasm.__wbg_set_billboardmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set showBoundingBox(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_showBoundingBox(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get maxZoom() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_maxZoom(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set maxZoom(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    }
+    /**
+     * The terrain is upsampled until it reaches `overscaled_max_zoom`.
+     * @returns {number | undefined}
+     */
+    get overscaledMaxZoom() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_overscaledMaxZoom(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * The terrain is upsampled until it reaches `overscaled_max_zoom`.
+     * @param {number | null} [arg0]
+     */
+    set overscaledMaxZoom(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_overscaledMaxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get minZoom() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_minZoom(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @param {number | null} [arg0]
+     */
+    set minZoom(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_minZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {ElevationDecoder | undefined}
      */
-    get elevation_decoder() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_elevation_decoder(this.__wbg_ptr);
+    get elevationDecoder() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_elevationDecoder(this.__wbg_ptr);
         return ret === 0 ? undefined : ElevationDecoder.__wrap(ret);
     }
     /**
      * @param {ElevationDecoder | null} [arg0]
      */
-    set elevation_decoder(arg0) {
+    set elevationDecoder(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, ElevationDecoder);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_rasterterrainmaterial_elevation_decoder(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_rasterterrainmaterial_elevationDecoder(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {number | undefined}
      */
-    get tile_size() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_tile_size(this.__wbg_ptr);
+    get tileSize() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_tileSize(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set tile_size(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_tile_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set tileSize(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_tileSize(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
 }
 
@@ -7141,54 +8635,214 @@ export class RasterTileInternalMaterial {
     /**
      * @returns {boolean | undefined}
      */
-    get cast_shadow() {
-        const ret = wasm.__wbg_get_pointmaterial_scale_by_distance(this.__wbg_ptr);
+    get castShadow() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_castShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set cast_shadow(arg0) {
-        wasm.__wbg_set_pointmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set castShadow(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get receive_shadow() {
-        const ret = wasm.__wbg_get_pointmaterial_clamp_to_ground(this.__wbg_ptr);
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_receiveShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set receive_shadow(arg0) {
-        wasm.__wbg_set_pointmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get should_compute_normal_from_vertex() {
-        const ret = wasm.__wbg_get_pointmaterial_depth_test(this.__wbg_ptr);
+    get showBoundingBox() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_showBoundingBox(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set should_compute_normal_from_vertex(arg0) {
-        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set showBoundingBox(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_showBoundingBox(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get isElevationHeatmaps() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_isElevationHeatmaps(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set isElevationHeatmaps(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_rastertileinternalmaterial_isElevationHeatmaps(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationMinHeight() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationMinHeight(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationMinHeight(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationMinHeight(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationMaxHeight() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationMaxHeight(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationMaxHeight(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationMaxHeight(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationRScaler() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationRScaler(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationRScaler(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationRScaler(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationGScaler() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationGScaler(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationGScaler(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationGScaler(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationBScaler() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationBScaler(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationBScaler(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationBScaler(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationBoundary() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationBoundary(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationBoundary(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationBoundary(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationMaxOffset() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationMaxOffset(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationMaxOffset(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationMaxOffset(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationMinOffset() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationMinOffset(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationMinOffset(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationMinOffset(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationEpsilon() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationEpsilon(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationEpsilon(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationEpsilon(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get elevationOffset() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_elevationOffset(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set elevationOffset(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_elevationOffset(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {boolean}
      */
-    get wireframe() {
-        const ret = wasm.__wbg_get_rastertileinternalmaterial_wireframe(this.__wbg_ptr);
+    get logarithmic() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_logarithmic(this.__wbg_ptr);
         return ret !== 0;
     }
     /**
      * @param {boolean} arg0
      */
-    set wireframe(arg0) {
-        wasm.__wbg_set_rastertileinternalmaterial_wireframe(this.__wbg_ptr, arg0);
+    set logarithmic(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_logarithmic(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {number}
+     */
+    get logBoundary() {
+        const ret = wasm.__wbg_get_rastertileinternalmaterial_logBoundary(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set logBoundary(arg0) {
+        wasm.__wbg_set_rastertileinternalmaterial_logBoundary(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {any[] | undefined}
@@ -7233,131 +8887,92 @@ export class RasterTileMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_pointmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_rastertilematerial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_pointmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get segments() {
-        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set segments(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_rastertilematerial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get color() {
-        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
     get opacity() {
-        const ret = wasm.__wbg_get_modelmaterial_max_sse(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polygonmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set opacity(arg0) {
-        wasm.__wbg_set_modelmaterial_max_sse(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_polygonmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
-    get max_zoom() {
-        const ret = wasm.__wbg_get_modelmaterial_color(this.__wbg_ptr);
+    get maxZoom() {
+        const ret = wasm.__wbg_get_rastertilematerial_maxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set max_zoom(arg0) {
-        wasm.__wbg_set_modelmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set maxZoom(arg0) {
+        wasm.__wbg_set_rastertilematerial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
-    get min_zoom() {
-        const ret = wasm.__wbg_get_rastertilematerial_min_zoom(this.__wbg_ptr);
+    get minZoom() {
+        const ret = wasm.__wbg_get_rastertilematerial_minZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set min_zoom(arg0) {
-        wasm.__wbg_set_rastertilematerial_min_zoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get max_sse() {
-        const ret = wasm.__wbg_get_modelmaterial_roughness(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set max_sse(arg0) {
-        wasm.__wbg_set_modelmaterial_roughness(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
-    }
-    /**
-     * @returns {boolean | undefined}
-     */
-    get wireframe() {
-        const ret = wasm.__wbg_get_pointmaterial_scale_by_distance(this.__wbg_ptr);
-        return ret === 0xFFFFFF ? undefined : ret !== 0;
-    }
-    /**
-     * @param {boolean | null} [arg0]
-     */
-    set wireframe(arg0) {
-        wasm.__wbg_set_pointmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set minZoom(arg0) {
+        wasm.__wbg_set_rastertilematerial_minZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {boolean | undefined}
      */
     get tms() {
-        const ret = wasm.__wbg_get_pointmaterial_clamp_to_ground(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_rastertilematerial_tms(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
     set tms(arg0) {
-        wasm.__wbg_set_pointmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_rastertilematerial_tms(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get should_compute_normal_from_vertex() {
-        const ret = wasm.__wbg_get_pointmaterial_depth_test(this.__wbg_ptr);
+    get showBoundingBox() {
+        const ret = wasm.__wbg_get_rastertilematerial_showBoundingBox(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set should_compute_normal_from_vertex(arg0) {
-        wasm.__wbg_set_pointmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set showBoundingBox(arg0) {
+        wasm.__wbg_set_rastertilematerial_showBoundingBox(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
 }
 
@@ -8008,17 +9623,41 @@ export class ReturnedConstructedTerrainMesh {
         wasm.__wbg_set_returnedconstructedterrainmesh_min_height(this.__wbg_ptr, arg0);
     }
     /**
+     * @returns {Vec3 | undefined}
+     */
+    get rtc_translation() {
+        const ret = wasm.__wbg_get_returnedconstructedterrainmesh_rtc_translation(this.__wbg_ptr);
+        return ret === 0 ? undefined : Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3 | null} [arg0]
+     */
+    set rtc_translation(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec3);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_returnedconstructedterrainmesh_rtc_translation(this.__wbg_ptr, ptr0);
+    }
+    /**
      * @param {Geometry} geometry
      * @param {number} max_height
      * @param {number} min_height
      * @param {Float32Array} heights
+     * @param {Vec3 | null} [rtc_translation]
      */
-    constructor(geometry, max_height, min_height, heights) {
+    constructor(geometry, max_height, min_height, heights, rtc_translation) {
         _assertClass(geometry, Geometry);
         var ptr0 = geometry.__destroy_into_raw();
         const ptr1 = passArrayF32ToWasm0(heights, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.returnedconstructedterrainmesh_new(ptr0, max_height, min_height, ptr1, len1);
+        let ptr2 = 0;
+        if (!isLikeNone(rtc_translation)) {
+            _assertClass(rtc_translation, Vec3);
+            ptr2 = rtc_translation.__destroy_into_raw();
+        }
+        const ret = wasm.returnedconstructedterrainmesh_new(ptr0, max_height, min_height, ptr1, len1, ptr2);
         this.__wbg_ptr = ret >>> 0;
         ReturnedConstructedTerrainMeshFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -8082,7 +9721,7 @@ export class ReturnedTransferablePolygonBatchedFeature {
      * @returns {PolygonMaterial}
      */
     get material() {
-        const ret = wasm.__wbg_get_polygonmesh_material(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_returnedtransferablepolygonbatchedfeature_material(this.__wbg_ptr);
         return PolygonMaterial.__wrap(ret);
     }
     /**
@@ -8091,7 +9730,7 @@ export class ReturnedTransferablePolygonBatchedFeature {
     set material(arg0) {
         _assertClass(arg0, PolygonMaterial);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_polygonmesh_material(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_returnedtransferablepolygonbatchedfeature_material(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {Uint32Array}
@@ -8108,7 +9747,7 @@ export class ReturnedTransferablePolygonBatchedFeature {
         return ret;
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
     transferOuterRing() {
         const ret = wasm.returnedtransferablepolygonbatchedfeature_transferOuterRing(this.__wbg_ptr);
@@ -8122,7 +9761,7 @@ export class ReturnedTransferablePolygonBatchedFeature {
         return ret;
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
     transferHoles() {
         const ret = wasm.returnedtransferablepolygonbatchedfeature_transferHoles(this.__wbg_ptr);
@@ -8201,7 +9840,7 @@ export class ReturnedTransferablePolylineBatchedFeature {
      * @returns {PolylineMaterial}
      */
     get material() {
-        const ret = wasm.__wbg_get_polylinemesh_material(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_returnedtransferablepolylinebatchedfeature_material(this.__wbg_ptr);
         return PolylineMaterial.__wrap(ret);
     }
     /**
@@ -8210,7 +9849,7 @@ export class ReturnedTransferablePolylineBatchedFeature {
     set material(arg0) {
         _assertClass(arg0, PolylineMaterial);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_polylinemesh_material(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_returnedtransferablepolylinebatchedfeature_material(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {Uint32Array}
@@ -8227,7 +9866,7 @@ export class ReturnedTransferablePolylineBatchedFeature {
         return ret;
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
     transferPoints() {
         const ret = wasm.returnedtransferablepolylinebatchedfeature_transferPoints(this.__wbg_ptr);
@@ -8318,14 +9957,14 @@ export class TerrainHeightUpdatedEvent {
      * @returns {bigint}
      */
     get bits() {
-        const ret = wasm.__wbg_get_meshadded_tile_handle(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_terrainheightupdatedevent_bits(this.__wbg_ptr);
         return BigInt.asUintN(64, ret);
     }
     /**
      * @param {bigint} arg0
      */
     set bits(arg0) {
-        wasm.__wbg_set_meshadded_tile_handle(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_terrainheightupdatedevent_bits(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {LLE}
@@ -8413,35 +10052,38 @@ export class TerrainLayerDescription {
     /**
      * @returns {RasterTerrainMaterial | undefined}
      */
-    get raster_terrain() {
-        const ret = wasm.__wbg_get_terrainlayerdescription_raster_terrain(this.__wbg_ptr);
+    get rasterTerrain() {
+        const ret = wasm.__wbg_get_terrainlayerdescription_rasterTerrain(this.__wbg_ptr);
         return ret === 0 ? undefined : RasterTerrainMaterial.__wrap(ret);
     }
     /**
      * @param {RasterTerrainMaterial | null} [arg0]
      */
-    set raster_terrain(arg0) {
+    set rasterTerrain(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, RasterTerrainMaterial);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_terrainlayerdescription_raster_terrain(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_terrainlayerdescription_rasterTerrain(this.__wbg_ptr, ptr0);
     }
     /**
-     * Compute normals from vertices if the model doesn't have a normal.
-     * @returns {boolean | undefined}
+     * @returns {EllipsoidTerrainMaterial | undefined}
      */
-    get should_compute_normal_from_vertex() {
-        const ret = wasm.__wbg_get_terrainlayerdescription_should_compute_normal_from_vertex(this.__wbg_ptr);
-        return ret === 0xFFFFFF ? undefined : ret !== 0;
+    get ellipsoid() {
+        const ret = wasm.__wbg_get_terrainlayerdescription_ellipsoid(this.__wbg_ptr);
+        return ret === 0 ? undefined : EllipsoidTerrainMaterial.__wrap(ret);
     }
     /**
-     * Compute normals from vertices if the model doesn't have a normal.
-     * @param {boolean | null} [arg0]
+     * @param {EllipsoidTerrainMaterial | null} [arg0]
      */
-    set should_compute_normal_from_vertex(arg0) {
-        wasm.__wbg_set_terrainlayerdescription_should_compute_normal_from_vertex(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set ellipsoid(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, EllipsoidTerrainMaterial);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_terrainlayerdescription_ellipsoid(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -8474,40 +10116,40 @@ export class TextMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_textmaterial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_shouldRotateInDefault(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_textmaterial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_modelmaterial_shouldRotateInDefault(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
     get size() {
-        const ret = wasm.__wbg_get_billboardmaterial_size(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_shininess(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set size(arg0) {
-        wasm.__wbg_set_billboardmaterial_size(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_modelmaterial_shininess(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
     get color() {
-        const ret = wasm.__wbg_get_billboardmaterial_color(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_rasterterrainmaterial_overscaledMaxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set color(arg0) {
-        wasm.__wbg_set_billboardmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+        wasm.__wbg_set_rasterterrainmaterial_overscaledMaxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {Vec2 | undefined}
@@ -8531,53 +10173,53 @@ export class TextMaterial {
      * @returns {number | undefined}
      */
     get height() {
-        const ret = wasm.__wbg_get_billboardmaterial_height(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_modelmaterial_ior(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
     set height(arg0) {
-        wasm.__wbg_set_billboardmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+        wasm.__wbg_set_modelmaterial_ior(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {boolean | undefined}
      */
-    get scale_by_distance() {
-        const ret = wasm.__wbg_get_textmaterial_scale_by_distance(this.__wbg_ptr);
+    get scaleByDistance() {
+        const ret = wasm.__wbg_get_modelmaterial_water(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set scale_by_distance(arg0) {
-        wasm.__wbg_set_textmaterial_scale_by_distance(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set scaleByDistance(arg0) {
+        wasm.__wbg_set_modelmaterial_water(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get clamp_to_ground() {
-        const ret = wasm.__wbg_get_textmaterial_clamp_to_ground(this.__wbg_ptr);
+    get clampToGround() {
+        const ret = wasm.__wbg_get_modelmaterial_applyWaterNormal(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set clamp_to_ground(arg0) {
-        wasm.__wbg_set_textmaterial_clamp_to_ground(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set clampToGround(arg0) {
+        wasm.__wbg_set_modelmaterial_applyWaterNormal(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get depth_test() {
-        const ret = wasm.__wbg_get_textmaterial_depth_test(this.__wbg_ptr);
+    get depthTest() {
+        const ret = wasm.__wbg_get_modelmaterial_specular(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set depth_test(arg0) {
-        wasm.__wbg_set_textmaterial_depth_test(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set depthTest(arg0) {
+        wasm.__wbg_set_modelmaterial_specular(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {string | undefined}
@@ -8600,6 +10242,7 @@ export class TextMaterial {
         wasm.__wbg_set_textmaterial_text(this.__wbg_ptr, ptr0, len0);
     }
     /**
+     * Specify URL for font file. Supported files are ttf, otf and woff. Default is `Roboto`.
      * @returns {string | undefined}
      */
     get font() {
@@ -8612,6 +10255,7 @@ export class TextMaterial {
         return v1;
     }
     /**
+     * Specify URL for font file. Supported files are ttf, otf and woff. Default is `Roboto`.
      * @param {string | null} [arg0]
      */
     set font(arg0) {
@@ -8622,54 +10266,54 @@ export class TextMaterial {
     /**
      * @returns {number | undefined}
      */
-    get background_color() {
-        const ret = wasm.__wbg_get_textmaterial_background_color(this.__wbg_ptr);
+    get backgroundColor() {
+        const ret = wasm.__wbg_get_rasterterrainmaterial_tileSize(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set background_color(arg0) {
-        wasm.__wbg_set_textmaterial_background_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set backgroundColor(arg0) {
+        wasm.__wbg_set_rasterterrainmaterial_tileSize(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
-    get border_color() {
-        const ret = wasm.__wbg_get_textmaterial_border_color(this.__wbg_ptr);
+    get borderColor() {
+        const ret = wasm.__wbg_get_textmaterial_borderColor(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set border_color(arg0) {
-        wasm.__wbg_set_textmaterial_border_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set borderColor(arg0) {
+        wasm.__wbg_set_textmaterial_borderColor(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
      * @returns {number | undefined}
      */
-    get border_width() {
-        const ret = wasm.__wbg_get_textmaterial_border_width(this.__wbg_ptr);
+    get borderWidth() {
+        const ret = wasm.__wbg_get_textmaterial_borderWidth(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set border_width(arg0) {
-        wasm.__wbg_set_textmaterial_border_width(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set borderWidth(arg0) {
+        wasm.__wbg_set_textmaterial_borderWidth(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
-    get corner_radius() {
-        const ret = wasm.__wbg_get_textmaterial_corner_radius(this.__wbg_ptr);
+    get cornerRadius() {
+        const ret = wasm.__wbg_get_textmaterial_cornerRadius(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set corner_radius(arg0) {
-        wasm.__wbg_set_textmaterial_corner_radius(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set cornerRadius(arg0) {
+        wasm.__wbg_set_textmaterial_cornerRadius(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {Vec2 | undefined}
@@ -8690,94 +10334,80 @@ export class TextMaterial {
         wasm.__wbg_set_textmaterial_padding(this.__wbg_ptr, ptr0);
     }
     /**
-     * @returns {string | undefined}
+     * Outline blur radius in CSS pixels. Defaults to `0.0`.
+     * @returns {number | undefined}
      */
-    get id_property() {
-        const ret = wasm.__wbg_get_textmaterial_id_property(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
+    get outlineBlur() {
+        const ret = wasm.__wbg_get_textmaterial_outlineBlur(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @param {string | null} [arg0]
+     * Outline blur radius in CSS pixels. Defaults to `0.0`.
+     * @param {number | null} [arg0]
      */
-    set id_property(arg0) {
-        var ptr0 = isLikeNone(arg0) ? 0 : passStringToWasm0(arg0, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_textmaterial_id_property(this.__wbg_ptr, ptr0, len0);
+    set outlineBlur(arg0) {
+        wasm.__wbg_set_textmaterial_outlineBlur(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {number | undefined}
      */
-    get outline_blur() {
-        const ret = wasm.__wbg_get_modelmaterial_specular_strength(this.__wbg_ptr);
+    get outlineColor() {
+        const ret = wasm.__wbg_get_textmaterial_outlineColor(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set outline_blur(arg0) {
-        wasm.__wbg_set_modelmaterial_specular_strength(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set outlineColor(arg0) {
+        wasm.__wbg_set_textmaterial_outlineColor(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
-     * @returns {number | undefined}
-     */
-    get outline_color() {
-        const ret = wasm.__wbg_get_textmaterial_outline_color(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @param {number | null} [arg0]
-     */
-    set outline_color(arg0) {
-        wasm.__wbg_set_textmaterial_outline_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
-    }
-    /**
+     * Pixel offset `[x, y]` in CSS pixels. Defaults to `(0.0, 0.0)`.
      * @returns {Vec2 | undefined}
      */
-    get outline_offset() {
-        const ret = wasm.__wbg_get_textmaterial_outline_offset(this.__wbg_ptr);
+    get outlineOffset() {
+        const ret = wasm.__wbg_get_textmaterial_outlineOffset(this.__wbg_ptr);
         return ret === 0 ? undefined : Vec2.__wrap(ret);
     }
     /**
+     * Pixel offset `[x, y]` in CSS pixels. Defaults to `(0.0, 0.0)`.
      * @param {Vec2 | null} [arg0]
      */
-    set outline_offset(arg0) {
+    set outlineOffset(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, Vec2);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_textmaterial_outline_offset(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_textmaterial_outlineOffset(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {number | undefined}
      */
-    get outline_opacity() {
-        const ret = wasm.__wbg_get_textmaterial_outline_opacity(this.__wbg_ptr);
+    get outlineOpacity() {
+        const ret = wasm.__wbg_get_textmaterial_outlineOpacity(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set outline_opacity(arg0) {
-        wasm.__wbg_set_textmaterial_outline_opacity(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set outlineOpacity(arg0) {
+        wasm.__wbg_set_textmaterial_outlineOpacity(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
+     * Outline thickness measured in CSS pixels. Defaults to `0.0`.
      * @returns {number | undefined}
      */
-    get outline_width() {
-        const ret = wasm.__wbg_get_textmaterial_outline_width(this.__wbg_ptr);
+    get outlineWidth() {
+        const ret = wasm.__wbg_get_textmaterial_outlineWidth(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * Outline thickness measured in CSS pixels. Defaults to `0.0`.
      * @param {number | null} [arg0]
      */
-    set outline_width(arg0) {
-        wasm.__wbg_set_textmaterial_outline_width(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set outlineWidth(arg0) {
+        wasm.__wbg_set_textmaterial_outlineWidth(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
 }
 
@@ -8968,14 +10598,14 @@ export class TextureFragmentRequestedEvent {
      * @returns {number}
      */
     get gen() {
-        const ret = wasm.__wbg_get_terrainheightupdatedevent_ind(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_texturefragmentrequestedevent_gen(this.__wbg_ptr);
         return ret >>> 0;
     }
     /**
      * @param {number} arg0
      */
     set gen(arg0) {
-        wasm.__wbg_set_terrainheightupdatedevent_ind(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_texturefragmentrequestedevent_gen(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {bigint}
@@ -9084,20 +10714,38 @@ export class TileLayerDescription {
     /**
      * @returns {RasterTileMaterial | undefined}
      */
-    get raster_tile() {
-        const ret = wasm.__wbg_get_tilelayerdescription_raster_tile(this.__wbg_ptr);
+    get rasterTile() {
+        const ret = wasm.__wbg_get_tilelayerdescription_rasterTile(this.__wbg_ptr);
         return ret === 0 ? undefined : RasterTileMaterial.__wrap(ret);
     }
     /**
      * @param {RasterTileMaterial | null} [arg0]
      */
-    set raster_tile(arg0) {
+    set rasterTile(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, RasterTileMaterial);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_tilelayerdescription_raster_tile(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_tilelayerdescription_rasterTile(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {ElevationHeatmapMaterial | undefined}
+     */
+    get elevationHeatmap() {
+        const ret = wasm.__wbg_get_tilelayerdescription_elevationHeatmap(this.__wbg_ptr);
+        return ret === 0 ? undefined : ElevationHeatmapMaterial.__wrap(ret);
+    }
+    /**
+     * @param {ElevationHeatmapMaterial | null} [arg0]
+     */
+    set elevationHeatmap(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, ElevationHeatmapMaterial);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_tilelayerdescription_elevationHeatmap(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -9523,20 +11171,20 @@ export class TransferableModelGeometry {
     /**
      * @returns {TransferableFloatAttribute | undefined}
      */
-    get batch_id_and_selected_status() {
-        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr);
+    get batch_ids() {
+        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_ids(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
      * @param {TransferableFloatAttribute | null} [arg0]
      */
-    set batch_id_and_selected_status(arg0) {
+    set batch_ids(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, TransferableFloatAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablemodelgeometry_batch_ids(this.__wbg_ptr, ptr0);
     }
 }
 
@@ -9583,17 +11231,17 @@ export class TransferablePointGeometry {
     /**
      * @returns {TransferableFloatAttribute}
      */
-    get batch_id_and_sel() {
-        const ret = wasm.__wbg_get_transferablepointgeometry_batch_id_and_sel(this.__wbg_ptr);
+    get batch_ids() {
+        const ret = wasm.__wbg_get_transferablepointgeometry_batch_ids(this.__wbg_ptr);
         return TransferableFloatAttribute.__wrap(ret);
     }
     /**
      * @param {TransferableFloatAttribute} arg0
      */
-    set batch_id_and_sel(arg0) {
+    set batch_ids(arg0) {
         _assertClass(arg0, TransferableFloatAttribute);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_transferablepointgeometry_batch_id_and_sel(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablepointgeometry_batch_ids(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableUintAttribute}
@@ -9745,7 +11393,7 @@ export class TransferablePolygonBatchedFeature {
         return ret;
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
     transferOuterRing() {
         const ret = wasm.transferablepolygonbatchedfeature_transferOuterRing(this.__wbg_ptr);
@@ -9759,7 +11407,7 @@ export class TransferablePolygonBatchedFeature {
         return ret;
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
     transferHoles() {
         const ret = wasm.transferablepolygonbatchedfeature_transferHoles(this.__wbg_ptr);
@@ -9821,25 +11469,64 @@ export class TransferablePolygonGeometry {
         wasm.__wbg_transferablepolygongeometry_free(ptr, 0);
     }
     /**
-     * @returns {TransferableFloatAttribute}
+     * @returns {TransferableFloatAttribute | undefined}
      */
     get position() {
-        const ret = wasm.__wbg_get_transferablepolygongeometry_position(this.__wbg_ptr);
-        return TransferableFloatAttribute.__wrap(ret);
+        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_ids(this.__wbg_ptr);
+        return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
-     * @param {TransferableFloatAttribute} arg0
+     * @param {TransferableFloatAttribute | null} [arg0]
      */
     set position(arg0) {
-        _assertClass(arg0, TransferableFloatAttribute);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_transferablepolygongeometry_position(this.__wbg_ptr, ptr0);
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, TransferableFloatAttribute);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_transferablemodelgeometry_batch_ids(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {TransferableFloatAttribute | undefined}
+     */
+    get position_3d_high() {
+        const ret = wasm.__wbg_get_transferablepolygongeometry_position_3d_high(this.__wbg_ptr);
+        return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
+    }
+    /**
+     * @param {TransferableFloatAttribute | null} [arg0]
+     */
+    set position_3d_high(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, TransferableFloatAttribute);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_transferablepolygongeometry_position_3d_high(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @returns {TransferableFloatAttribute | undefined}
+     */
+    get position_3d_low() {
+        const ret = wasm.__wbg_get_transferablepolygongeometry_position_3d_low(this.__wbg_ptr);
+        return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
+    }
+    /**
+     * @param {TransferableFloatAttribute | null} [arg0]
+     */
+    set position_3d_low(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, TransferableFloatAttribute);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_transferablepolygongeometry_position_3d_low(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableFloatAttribute | undefined}
      */
     get normal() {
-        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_transferablepolygongeometry_normal(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
@@ -9851,7 +11538,7 @@ export class TransferablePolygonGeometry {
             _assertClass(arg0, TransferableFloatAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablepolygongeometry_normal(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableFloatAttribute | undefined}
@@ -9874,20 +11561,20 @@ export class TransferablePolygonGeometry {
     /**
      * @returns {TransferableFloatAttribute | undefined}
      */
-    get batch_id_and_sel() {
-        const ret = wasm.__wbg_get_transferablepolygongeometry_batch_id_and_sel(this.__wbg_ptr);
+    get batch_ids() {
+        const ret = wasm.__wbg_get_transferablepolygongeometry_batch_ids(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
      * @param {TransferableFloatAttribute | null} [arg0]
      */
-    set batch_id_and_sel(arg0) {
+    set batch_ids(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, TransferableFloatAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablepolygongeometry_batch_id_and_sel(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablepolygongeometry_batch_ids(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableUintAttribute | undefined}
@@ -9921,37 +11608,52 @@ export class TransferablePolygonGeometry {
         wasm.__wbg_set_transferablepolygongeometry_indices(this.__wbg_ptr, arg0);
     }
     /**
-     * @param {TransferableFloatAttribute} position
+     * @param {TransferableFloatAttribute | null | undefined} position
+     * @param {TransferableFloatAttribute | null | undefined} position_3d_high
+     * @param {TransferableFloatAttribute | null | undefined} position_3d_low
      * @param {TransferableFloatAttribute | null | undefined} normal
      * @param {TransferableFloatAttribute | null | undefined} scale_normal_and_cap
-     * @param {TransferableFloatAttribute | null | undefined} batch_id_and_sel
+     * @param {TransferableFloatAttribute | null | undefined} batch_ids
      * @param {TransferableUintAttribute | null | undefined} batch_index
      * @param {number} indices
      */
-    constructor(position, normal, scale_normal_and_cap, batch_id_and_sel, batch_index, indices) {
-        _assertClass(position, TransferableFloatAttribute);
-        var ptr0 = position.__destroy_into_raw();
+    constructor(position, position_3d_high, position_3d_low, normal, scale_normal_and_cap, batch_ids, batch_index, indices) {
+        let ptr0 = 0;
+        if (!isLikeNone(position)) {
+            _assertClass(position, TransferableFloatAttribute);
+            ptr0 = position.__destroy_into_raw();
+        }
         let ptr1 = 0;
-        if (!isLikeNone(normal)) {
-            _assertClass(normal, TransferableFloatAttribute);
-            ptr1 = normal.__destroy_into_raw();
+        if (!isLikeNone(position_3d_high)) {
+            _assertClass(position_3d_high, TransferableFloatAttribute);
+            ptr1 = position_3d_high.__destroy_into_raw();
         }
         let ptr2 = 0;
-        if (!isLikeNone(scale_normal_and_cap)) {
-            _assertClass(scale_normal_and_cap, TransferableFloatAttribute);
-            ptr2 = scale_normal_and_cap.__destroy_into_raw();
+        if (!isLikeNone(position_3d_low)) {
+            _assertClass(position_3d_low, TransferableFloatAttribute);
+            ptr2 = position_3d_low.__destroy_into_raw();
         }
         let ptr3 = 0;
-        if (!isLikeNone(batch_id_and_sel)) {
-            _assertClass(batch_id_and_sel, TransferableFloatAttribute);
-            ptr3 = batch_id_and_sel.__destroy_into_raw();
+        if (!isLikeNone(normal)) {
+            _assertClass(normal, TransferableFloatAttribute);
+            ptr3 = normal.__destroy_into_raw();
         }
         let ptr4 = 0;
+        if (!isLikeNone(scale_normal_and_cap)) {
+            _assertClass(scale_normal_and_cap, TransferableFloatAttribute);
+            ptr4 = scale_normal_and_cap.__destroy_into_raw();
+        }
+        let ptr5 = 0;
+        if (!isLikeNone(batch_ids)) {
+            _assertClass(batch_ids, TransferableFloatAttribute);
+            ptr5 = batch_ids.__destroy_into_raw();
+        }
+        let ptr6 = 0;
         if (!isLikeNone(batch_index)) {
             _assertClass(batch_index, TransferableUintAttribute);
-            ptr4 = batch_index.__destroy_into_raw();
+            ptr6 = batch_index.__destroy_into_raw();
         }
-        const ret = wasm.transferablepolygongeometry_new(ptr0, ptr1, ptr2, ptr3, ptr4, indices);
+        const ret = wasm.transferablepolygongeometry_new(ptr0, ptr1, ptr2, ptr3, ptr4, ptr5, ptr6, indices);
         this.__wbg_ptr = ret >>> 0;
         TransferablePolygonGeometryFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -9987,7 +11689,7 @@ export class TransferablePolygonOutlineGeometry {
      * @returns {TransferableFloatAttribute | undefined}
      */
     get position() {
-        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_ids(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
@@ -9999,13 +11701,13 @@ export class TransferablePolygonOutlineGeometry {
             _assertClass(arg0, TransferableFloatAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablemodelgeometry_batch_ids(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableFloatAttribute | undefined}
      */
     get scale_normal_and_cap() {
-        const ret = wasm.__wbg_get_transferablepolygongeometry_scale_normal_and_cap(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_transferablepolygongeometry_position_3d_high(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
@@ -10017,7 +11719,7 @@ export class TransferablePolygonOutlineGeometry {
             _assertClass(arg0, TransferableFloatAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablepolygongeometry_scale_normal_and_cap(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablepolygongeometry_position_3d_high(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {number | undefined}
@@ -10153,7 +11855,7 @@ export class TransferablePolylineBatchedFeature {
         return ret;
     }
     /**
-     * @returns {Float32Array}
+     * @returns {Float64Array}
      */
     transferPoints() {
         const ret = wasm.transferablepolylinebatchedfeature_transferPoints(this.__wbg_ptr);
@@ -10242,7 +11944,7 @@ export class TransferablePolylineGeometry {
      * @returns {TransferableFloatAttribute}
      */
     get start_normals() {
-        const ret = wasm.__wbg_get_transferablepolygongeometry_position(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_transferablepolylinegeometry_start_normals(this.__wbg_ptr);
         return TransferableFloatAttribute.__wrap(ret);
     }
     /**
@@ -10251,7 +11953,7 @@ export class TransferablePolylineGeometry {
     set start_normals(arg0) {
         _assertClass(arg0, TransferableFloatAttribute);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_transferablepolygongeometry_position(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablepolylinegeometry_start_normals(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableFloatAttribute}
@@ -10286,26 +11988,26 @@ export class TransferablePolylineGeometry {
     /**
      * @returns {TransferableFloatAttribute | undefined}
      */
-    get batch_id_and_sel() {
-        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr);
+    get batch_ids() {
+        const ret = wasm.__wbg_get_transferablemodelgeometry_batch_ids(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableFloatAttribute.__wrap(ret);
     }
     /**
      * @param {TransferableFloatAttribute | null} [arg0]
      */
-    set batch_id_and_sel(arg0) {
+    set batch_ids(arg0) {
         let ptr0 = 0;
         if (!isLikeNone(arg0)) {
             _assertClass(arg0, TransferableFloatAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablemodelgeometry_batch_id_and_selected_status(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablemodelgeometry_batch_ids(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {TransferableUintAttribute | undefined}
      */
     get batch_index() {
-        const ret = wasm.__wbg_get_transferablepolygongeometry_scale_normal_and_cap(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_transferablepolygongeometry_position_3d_high(this.__wbg_ptr);
         return ret === 0 ? undefined : TransferableUintAttribute.__wrap(ret);
     }
     /**
@@ -10317,7 +12019,7 @@ export class TransferablePolylineGeometry {
             _assertClass(arg0, TransferableUintAttribute);
             ptr0 = arg0.__destroy_into_raw();
         }
-        wasm.__wbg_set_transferablepolygongeometry_scale_normal_and_cap(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_transferablepolygongeometry_position_3d_high(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {number}
@@ -10339,11 +12041,11 @@ export class TransferablePolylineGeometry {
      * @param {TransferableFloatAttribute} start_normals
      * @param {TransferableFloatAttribute} end_normal_and_texture_coordinate_normalization_x
      * @param {TransferableFloatAttribute} right_normal_and_texture_coordinate_normalization_y
-     * @param {TransferableFloatAttribute | null | undefined} batch_id_and_sel
+     * @param {TransferableFloatAttribute | null | undefined} batch_ids
      * @param {TransferableUintAttribute | null | undefined} batch_index
      * @param {number} indices
      */
-    constructor(position, start, forward_offset, start_normals, end_normal_and_texture_coordinate_normalization_x, right_normal_and_texture_coordinate_normalization_y, batch_id_and_sel, batch_index, indices) {
+    constructor(position, start, forward_offset, start_normals, end_normal_and_texture_coordinate_normalization_x, right_normal_and_texture_coordinate_normalization_y, batch_ids, batch_index, indices) {
         _assertClass(position, TransferableFloatAttribute);
         var ptr0 = position.__destroy_into_raw();
         _assertClass(start, TransferableFloatAttribute);
@@ -10357,9 +12059,9 @@ export class TransferablePolylineGeometry {
         _assertClass(right_normal_and_texture_coordinate_normalization_y, TransferableFloatAttribute);
         var ptr5 = right_normal_and_texture_coordinate_normalization_y.__destroy_into_raw();
         let ptr6 = 0;
-        if (!isLikeNone(batch_id_and_sel)) {
-            _assertClass(batch_id_and_sel, TransferableFloatAttribute);
-            ptr6 = batch_id_and_sel.__destroy_into_raw();
+        if (!isLikeNone(batch_ids)) {
+            _assertClass(batch_ids, TransferableFloatAttribute);
+            ptr6 = batch_ids.__destroy_into_raw();
         }
         let ptr7 = 0;
         if (!isLikeNone(batch_index)) {
@@ -10863,14 +12565,14 @@ export class UpsampleTerrainMeshParameters {
      * @returns {bigint}
      */
     get tile_handle() {
-        const ret = wasm.__wbg_get_constructterrainmeshparameters_tile_handle(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_upsampleterrainmeshparameters_tile_handle(this.__wbg_ptr);
         return BigInt.asUintN(64, ret);
     }
     /**
      * @param {bigint} arg0
      */
     set tile_handle(arg0) {
-        wasm.__wbg_set_constructterrainmeshparameters_tile_handle(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_upsampleterrainmeshparameters_tile_handle(this.__wbg_ptr, arg0);
     }
     /**
      * @param {bigint} tile_handle
@@ -10912,7 +12614,7 @@ export class UpsampleTerrainMeshResult {
      * @returns {TransferableGeometry}
      */
     get geometry() {
-        const ret = wasm.__wbg_get_constructterrainmeshresult_geometry(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_upsampleterrainmeshresult_geometry(this.__wbg_ptr);
         return TransferableGeometry.__wrap(ret);
     }
     /**
@@ -10921,57 +12623,81 @@ export class UpsampleTerrainMeshResult {
     set geometry(arg0) {
         _assertClass(arg0, TransferableGeometry);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_constructterrainmeshresult_geometry(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_upsampleterrainmeshresult_geometry(this.__wbg_ptr, ptr0);
     }
     /**
      * @returns {number}
      */
     get heights() {
-        const ret = wasm.__wbg_get_constructterrainmeshresult_heights(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_upsampleterrainmeshresult_heights(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set heights(arg0) {
-        wasm.__wbg_set_constructterrainmeshresult_heights(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_upsampleterrainmeshresult_heights(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get min_height() {
-        const ret = wasm.__wbg_get_constructterrainmeshresult_min_height(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_upsampleterrainmeshresult_min_height(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set min_height(arg0) {
-        wasm.__wbg_set_constructterrainmeshresult_min_height(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_upsampleterrainmeshresult_min_height(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get max_height() {
-        const ret = wasm.__wbg_get_constructterrainmeshresult_max_height(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_upsampleterrainmeshresult_max_height(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set max_height(arg0) {
-        wasm.__wbg_set_constructterrainmeshresult_max_height(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_upsampleterrainmeshresult_max_height(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @returns {Vec3 | undefined}
+     */
+    get rtc_translation() {
+        const ret = wasm.__wbg_get_upsampleterrainmeshresult_rtc_translation(this.__wbg_ptr);
+        return ret === 0 ? undefined : Vec3.__wrap(ret);
+    }
+    /**
+     * @param {Vec3 | null} [arg0]
+     */
+    set rtc_translation(arg0) {
+        let ptr0 = 0;
+        if (!isLikeNone(arg0)) {
+            _assertClass(arg0, Vec3);
+            ptr0 = arg0.__destroy_into_raw();
+        }
+        wasm.__wbg_set_constructpolygonbatchedfeatureresult_rtc_translation(this.__wbg_ptr, ptr0);
     }
     /**
      * @param {TransferableGeometry} geometry
      * @param {number} heights
      * @param {number} min_height
      * @param {number} max_height
+     * @param {Vec3 | null} [rtc_translation]
      */
-    constructor(geometry, heights, min_height, max_height) {
+    constructor(geometry, heights, min_height, max_height, rtc_translation) {
         _assertClass(geometry, TransferableGeometry);
         var ptr0 = geometry.__destroy_into_raw();
-        const ret = wasm.constructterrainmeshresult_new(ptr0, heights, min_height, max_height);
+        let ptr1 = 0;
+        if (!isLikeNone(rtc_translation)) {
+            _assertClass(rtc_translation, Vec3);
+            ptr1 = rtc_translation.__destroy_into_raw();
+        }
+        const ret = wasm.upsampleterrainmeshresult_new(ptr0, heights, min_height, max_height, ptr1);
         this.__wbg_ptr = ret >>> 0;
         UpsampleTerrainMeshResultFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -11007,27 +12733,27 @@ export class Vec2 {
      * @returns {number}
      */
     get x() {
-        const ret = wasm.__wbg_get_lle_lat(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_vec2_x(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set x(arg0) {
-        wasm.__wbg_set_lle_lat(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_vec2_x(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get y() {
-        const ret = wasm.__wbg_get_lle_lng(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_vec2_y(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set y(arg0) {
-        wasm.__wbg_set_lle_lng(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_vec2_y(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} x
@@ -11070,40 +12796,40 @@ export class Vec3 {
      * @returns {number}
      */
     get x() {
-        const ret = wasm.__wbg_get_lle_lat(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_vec2_x(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set x(arg0) {
-        wasm.__wbg_set_lle_lat(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_vec2_x(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get y() {
-        const ret = wasm.__wbg_get_lle_lng(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_vec2_y(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set y(arg0) {
-        wasm.__wbg_set_lle_lng(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_vec2_y(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get z() {
-        const ret = wasm.__wbg_get_lle_height(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_vec3_z(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set z(arg0) {
-        wasm.__wbg_set_lle_height(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_vec3_z(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} x
@@ -11111,7 +12837,7 @@ export class Vec3 {
      * @param {number} z
      */
     constructor(x, y, z) {
-        const ret = wasm.lle_new(x, y, z);
+        const ret = wasm.vec3_new(x, y, z);
         this.__wbg_ptr = ret >>> 0;
         Vec3Finalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -11147,66 +12873,68 @@ export class VectorTileMaterial {
      * @returns {boolean | undefined}
      */
     get show() {
-        const ret = wasm.__wbg_get_vectortilematerial_show(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_polylinematerial_show(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
     set show(arg0) {
-        wasm.__wbg_set_vectortilematerial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+        wasm.__wbg_set_polylinematerial_show(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get cast_shadow() {
-        const ret = wasm.__wbg_get_vectortilematerial_cast_shadow(this.__wbg_ptr);
+    get castShadow() {
+        const ret = wasm.__wbg_get_polylinematerial_castShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set cast_shadow(arg0) {
-        wasm.__wbg_set_vectortilematerial_cast_shadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set castShadow(arg0) {
+        wasm.__wbg_set_polylinematerial_castShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {boolean | undefined}
      */
-    get receive_shadow() {
-        const ret = wasm.__wbg_get_vectortilematerial_receive_shadow(this.__wbg_ptr);
+    get receiveShadow() {
+        const ret = wasm.__wbg_get_polylinematerial_receiveShadow(this.__wbg_ptr);
         return ret === 0xFFFFFF ? undefined : ret !== 0;
     }
     /**
      * @param {boolean | null} [arg0]
      */
-    set receive_shadow(arg0) {
-        wasm.__wbg_set_vectortilematerial_receive_shadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
+    set receiveShadow(arg0) {
+        wasm.__wbg_set_polylinematerial_receiveShadow(this.__wbg_ptr, isLikeNone(arg0) ? 0xFFFFFF : arg0 ? 1 : 0);
     }
     /**
      * @returns {number | undefined}
      */
-    get max_zoom() {
-        const ret = wasm.__wbg_get_polygonmaterial_color(this.__wbg_ptr);
+    get maxZoom() {
+        const ret = wasm.__wbg_get_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set max_zoom(arg0) {
-        wasm.__wbg_set_polygonmaterial_color(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set maxZoom(arg0) {
+        wasm.__wbg_set_ellipsoidterrainmaterial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
     /**
+     * `Globe.max_sse` would be used to a material that uses `clamp_to_ground`.
      * @returns {number | undefined}
      */
-    get max_sse() {
-        const ret = wasm.__wbg_get_modelmaterial_height(this.__wbg_ptr);
+    get maxSse() {
+        const ret = wasm.__wbg_get_polygonmaterial_height(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * `Globe.max_sse` would be used to a material that uses `clamp_to_ground`.
      * @param {number | null} [arg0]
      */
-    set max_sse(arg0) {
-        wasm.__wbg_set_modelmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
+    set maxSse(arg0) {
+        wasm.__wbg_set_polygonmaterial_height(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : Math.fround(arg0));
     }
     /**
      * @returns {string[] | undefined}
@@ -11231,15 +12959,15 @@ export class VectorTileMaterial {
     /**
      * @returns {number | undefined}
      */
-    get overscaled_max_zoom() {
-        const ret = wasm.__wbg_get_rasterterrainmaterial_min_zoom(this.__wbg_ptr);
+    get overscaledMaxZoom() {
+        const ret = wasm.__wbg_get_rastertilematerial_maxZoom(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @param {number | null} [arg0]
      */
-    set overscaled_max_zoom(arg0) {
-        wasm.__wbg_set_rasterterrainmaterial_min_zoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
+    set overscaledMaxZoom(arg0) {
+        wasm.__wbg_set_rastertilematerial_maxZoom(this.__wbg_ptr, isLikeNone(arg0) ? 0x100000001 : (arg0) >>> 0);
     }
 }
 
@@ -11308,14 +13036,14 @@ export class VectorTileState {
      * @returns {boolean}
      */
     get is_rendered() {
-        const ret = wasm.__wbg_get_vectortilestate_is_rendered(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_constructpolylinebatchedfeatureparameters_flat(this.__wbg_ptr);
         return ret !== 0;
     }
     /**
      * @param {boolean} arg0
      */
     set is_rendered(arg0) {
-        wasm.__wbg_set_vectortilestate_is_rendered(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_constructpolylinebatchedfeatureparameters_flat(this.__wbg_ptr, arg0);
     }
 }
 
@@ -11372,40 +13100,40 @@ export class Window {
      * @returns {number}
      */
     get width() {
-        const ret = wasm.__wbg_get_camerafrustum_near(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_window_width(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set width(arg0) {
-        wasm.__wbg_set_camerafrustum_near(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_window_width(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get height() {
-        const ret = wasm.__wbg_get_camerafrustum_far(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_window_height(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set height(arg0) {
-        wasm.__wbg_set_camerafrustum_far(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_window_height(this.__wbg_ptr, arg0);
     }
     /**
      * @returns {number}
      */
     get pixel_ratio() {
-        const ret = wasm.__wbg_get_camerafrustum_fov(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_window_pixel_ratio(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set pixel_ratio(arg0) {
-        wasm.__wbg_set_camerafrustum_fov(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_window_pixel_ratio(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} width
@@ -11554,6 +13282,10 @@ function __wbg_get_imports() {
         const ret = Number(arg0);
         return ret;
     };
+    imports.wbg.__wbg_call_0ba5f27818746ea4 = function() { return handleError(function (arg0, arg1, arg2, arg3, arg4) {
+        const ret = arg0.call(arg1, arg2, arg3, arg4);
+        return ret;
+    }, arguments) };
     imports.wbg.__wbg_call_52af042a326d9b3a = function() { return handleError(function (arg0, arg1, arg2) {
         const ret = arg0.call(arg1, arg2);
         return ret;
@@ -11679,6 +13411,10 @@ function __wbg_get_imports() {
         const ret = arg0.length;
         return ret;
     };
+    imports.wbg.__wbg_length_fbfce9fe1d38dbe8 = function(arg0) {
+        const ret = arg0.length;
+        return ret;
+    };
     imports.wbg.__wbg_lle_new = function(arg0) {
         const ret = LLE.__wrap(arg0);
         return ret;
@@ -11704,6 +13440,10 @@ function __wbg_get_imports() {
     };
     imports.wbg.__wbg_msCrypto_a61aeb35a24c1329 = function(arg0) {
         const ret = arg0.msCrypto;
+        return ret;
+    };
+    imports.wbg.__wbg_new_150ca8a92d65de92 = function(arg0) {
+        const ret = new Float64Array(arg0);
         return ret;
     };
     imports.wbg.__wbg_new_1b925e0c0e1d30ba = function() {
@@ -11808,6 +13548,9 @@ function __wbg_get_imports() {
     };
     imports.wbg.__wbg_set_3f1d0b984ed272ed = function(arg0, arg1, arg2) {
         arg0[arg1] = arg2;
+    };
+    imports.wbg.__wbg_set_57c4e2f8700b6eac = function(arg0, arg1, arg2) {
+        arg0.set(getArrayF64FromWasm0(arg1, arg2));
     };
     imports.wbg.__wbg_set_a15b7b524330d4f1 = function(arg0, arg1, arg2) {
         const ret = arg0.set(arg1, arg2);
@@ -11978,6 +13721,11 @@ function __wbg_get_imports() {
         const ret = BigInt.asUintN(64, arg0);
         return ret;
     };
+    imports.wbg.__wbindgen_cast_4af8e60a922bcf35 = function(arg0, arg1) {
+        // Cast intrinsic for `Ref(Slice(F64)) -> NamedExternref("Float64Array")`.
+        const ret = getArrayF64FromWasm0(arg0, arg1);
+        return ret;
+    };
     imports.wbg.__wbindgen_cast_7c316abdc43840a3 = function(arg0, arg1) {
         // Cast intrinsic for `Ref(Slice(U32)) -> NamedExternref("Uint32Array")`.
         const ret = getArrayU32FromWasm0(arg0, arg1);
@@ -12026,6 +13774,7 @@ function __wbg_finalize_init(instance, module) {
     __wbg_init.__wbindgen_wasm_module = module;
     cachedDataViewMemory0 = null;
     cachedFloat32ArrayMemory0 = null;
+    cachedFloat64ArrayMemory0 = null;
     cachedUint32ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
 
