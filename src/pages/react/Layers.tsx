@@ -1,5 +1,6 @@
 import {
   type LayerDescription,
+  Color,
   JAPAN_GSI_ELEVATION_DECODER,
 } from "@navara/three";
 import { Layer, useViewContext } from "@navara/three_react";
@@ -45,7 +46,7 @@ export const Layers: FC = () => {
       },
       model: {
         show: true,
-        color: 0xffffff,
+        color: new Color().setHex(0xffffff),
         metalness: 0,
         roughness: 1,
         castShadow: true,
@@ -64,7 +65,7 @@ export const Layers: FC = () => {
       },
       model: {
         show: true,
-        color: 0xffffff,
+        color: new Color().setHex(0xffffff),
         metalness: 0,
         roughness: 1,
         castShadow: true,

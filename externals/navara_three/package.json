@@ -5,5 +5,15 @@
   "private": true,
   "main": "pkg/index.umd.cjs",
   "module": "pkg/index.js",
-  "types": "pkg/index.d.ts"
+  "types": "pkg/index.d.ts",
+  "dependencies": {
+    "@takram/three-atmosphere": "^0.14.0",
+    "@takram/three-clouds": "^0.5.0",
+    "@takram/three-geospatial": "^0.4.0",
+    "@takram/three-geospatial-effects": "^0.4.1",
+    "n8ao": "^1.10.1",
+    "postprocessing": "^6.37.8",
+    "three-stdlib": "^2.36.0",
+    "troika-three-text": "^0.52.4"
+  }
 }
