@@ -1,0 +1,602 @@
+import ThreeView, {
+  JAPAN_GSI_ELEVATION_DECODER,
+  Color,
+  type LayerDescription,
+} from "@navara/three";
+import { Pane } from "tweakpane";
+
+import type { SSREffectLayer } from "../../../src/layers/effect";
+import { showAttributions } from "../../helpers/attributions";
+import {
+  TERRAIN_DATASETS,
+  TILE_DATASETS,
+  TILES_3D_DATASETS,
+  VECTOR_DATASETS,
+} from "../../helpers/constants";
+import { addCameraControl, addDateControl } from "../../helpers/control";
+import { addFieldsToFolder, type FolderFields } from "../../helpers/panel";
+
+import { type ReflectiveBoxLayerConfig } from "./layers";
+
+export const run = async (view: ThreeView<ReflectiveBoxLayerConfig>) => {
+  await view.init();
+
+  view.toneMappingExposure = 10;
+
+  // Add default effect layers
+  view.addDefaultEffectLayers();
+
+  const defaultAtmosphere = view.addDefaultAtmosphereLayers();
+  defaultAtmosphere.sun.update({
+    sun: {
+      castShadow: true,
+    },
+  });
+
+  view.addLayer({
+    type: "tiles",
+    data: { url: TILE_DATASETS.gsiSeamlessphoto.url },
+    rasterTile: {
+      maxZoom: 23,
+    },
+  });
+
+  view.addLayer({
+    type: "terrain",
+    data: {
+      url: TERRAIN_DATASETS.gsi.url,
+    },
+    rasterTerrain: {
+      maxZoom: 15,
+      minZoom: 6,
+      elevationDecoder: JAPAN_GSI_ELEVATION_DECODER(),
+      receiveShadow: true,
+      castShadow: true,
+    },
+  });
+
+  // Add some 3D tiles buildings
+  view.addLayer({
+    type: "cesium3dtiles",
+    data: {
+      url: TILES_3D_DATASETS.plateauChiyoda.url,
+    },
+    model: {
+      show: true,
+      color: new Color().setStyle("#ffffff"),
+      metalness: 0,
+      roughness: 0.5,
+      height: -50,
+      castShadow: true,
+      receiveShadow: true,
+    },
+  });
+
+  // Create controls panel
+  const pane = new Pane({ title: "SSR Water Reflection Example" });
+  pane.element.style.maxHeight = "98vh";
+  pane.element.style.overflow = "scroll";
+
+  view.setCamera({
+    lng: 139.7511145474829,
+    lat: 35.67364356091717,
+    height: 902.0,
+    heading: 64.41840149763287,
+    pitch: -36.00000121921312,
+    roll: 0,
+  });
+
+  // Camera controls
+  addCameraControl(view, pane);
+
+  // Date/Time controls for sun position
+  addDateControl(view, pane);
+
+  // SSR controls
+  addSSRControls(view, pane);
+
+  // Water polygon controls
+  addWaterControls(view, pane);
+
+  showAttributions([
+    TERRAIN_DATASETS.gsi,
+    TILE_DATASETS.gsiSeamlessphoto,
+    TILES_3D_DATASETS.plateauChiyoda,
+    VECTOR_DATASETS.gsiExperimentalVector,
+  ]);
+};
+
+const addSSRControls = (view: ThreeView, pane: Pane) => {
+  // Add SSR effect layer
+  let ssrLayer = view.addLayer<SSREffectLayer>({
+    type: "effect",
+    ssr: {},
+  });
+
+  const ssrParams = {
+    visible: ssrLayer.visible,
+    resolutionScale: ssrLayer.ref.raw?.resolutionScale ?? 0.5,
+    iterations: ssrLayer.ref.raw?.iterations ?? 16,
+    binarySearchIterations: ssrLayer.ref.raw?.binarySearchIterations ?? 4,
+    pixelZSize: ssrLayer.ref.raw?.pixelZSize ?? 0.1,
+    pixelStride: ssrLayer.ref.raw?.pixelStride ?? 16,
+    pixelStrideZCutoff: ssrLayer.ref.raw?.pixelStrideZCutoff ?? 10,
+    maxRayDistance: ssrLayer.ref.raw?.maxRayDistance ?? 200,
+    screenEdgeFadeStart: ssrLayer.ref.raw?.screenEdgeFadeStart ?? 0.9,
+    eyeFadeStart: ssrLayer.ref.raw?.eyeFadeStart ?? 0.4,
+    eyeFadeEnd: ssrLayer.ref.raw?.eyeFadeEnd ?? 0.8,
+    jitter: ssrLayer.ref.raw?.jitter ?? 0,
+    useConeTracing: ssrLayer.ref.raw?.useConeTracing ?? false,
+    coneTracingFadeStart: ssrLayer.ref.raw?.coneTracingFadeStart ?? 0,
+    coneTracingFadeEnd: ssrLayer.ref.raw?.coneTracingFadeEnd ?? 0,
+    coneTracingMaxDistance: ssrLayer.ref.raw?.coneTracingMaxDistance ?? 0,
+    coneTracingIteration: ssrLayer.ref.raw?.coneTracingIteration ?? 0,
+    coneTracingIor: ssrLayer.ref.raw?.coneTracingIor ?? 0,
+  };
+
+  const fields: FolderFields<typeof ssrParams> = [
+    {
+      name: "visible",
+      onChange: (v) => {
+        if (v.value) {
+          ssrLayer = view.addLayer<SSREffectLayer>({
+            type: "effect",
+            ssr: ssrParams,
+          });
+        } else {
+          ssrLayer.delete();
+        }
+      },
+    },
+    {
+      name: "resolutionScale",
+      params: { min: 0.1, max: 1, step: 0.1 },
+      onChange: (v) => {
+        ssrParams.resolutionScale = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "iterations",
+      params: { min: 1, step: 1 },
+      onChange: (v) => {
+        ssrParams.iterations = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "binarySearchIterations",
+      params: { min: 0, step: 1 },
+      onChange: (v) => {
+        ssrParams.binarySearchIterations = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "pixelZSize",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.pixelZSize = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "pixelStride",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.pixelStride = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "pixelStrideZCutoff",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.pixelStrideZCutoff = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "maxRayDistance",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.maxRayDistance = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "screenEdgeFadeStart",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.screenEdgeFadeStart = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "eyeFadeStart",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.eyeFadeStart = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "eyeFadeEnd",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.eyeFadeEnd = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "jitter",
+      params: { min: 0, max: 1 },
+      onChange: (v) => {
+        ssrParams.jitter = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "useConeTracing",
+      onChange: (v) => {
+        ssrParams.useConeTracing = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "coneTracingFadeStart",
+      params: { min: 0, max: 1 },
+      onChange: (v) => {
+        ssrParams.coneTracingFadeStart = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "coneTracingFadeEnd",
+      params: { min: 0, max: 1 },
+      onChange: (v) => {
+        ssrParams.coneTracingFadeEnd = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "coneTracingMaxDistance",
+      params: { min: 0 },
+      onChange: (v) => {
+        ssrParams.coneTracingMaxDistance = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "coneTracingIteration",
+      params: { min: 0, step: 1 },
+      onChange: (v) => {
+        ssrParams.coneTracingIteration = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+    {
+      name: "coneTracingIor",
+      params: {
+        color: {
+          alpha: false,
+          type: "int",
+        },
+      },
+      onChange: (v) => {
+        ssrParams.coneTracingIor = v.value;
+        ssrLayer.update({ ssr: ssrParams });
+      },
+    },
+  ];
+
+  addFieldsToFolder(
+    pane.addFolder({ title: "SSR Settings" }),
+    ssrParams,
+    fields,
+  );
+};
+
+const addWaterControls = (view: ThreeView, pane: Pane) => {
+  // Store the layer description object
+  const mvtLayerDescription: LayerDescription = {
+    type: "mvt",
+    data: {
+      url: VECTOR_DATASETS.gsiExperimentalVector.url,
+    },
+    polygon: {
+      color: new Color().setStyle("#001e0f"),
+      reflectivity: 0.02,
+      clampToGround: true,
+      wireframe: false,
+      water: true,
+      shininess: 100,
+      specularStrength: 2,
+      applyWaterNormal: false,
+      specular: true,
+      ior: 1.33333,
+      transparent: false,
+      opacity: 1.0,
+    },
+    vectorTile: {
+      maxZoom: 16,
+      layers: ["waterarea"],
+    },
+  };
+  const geoJsonLayerDescription: LayerDescription = {
+    type: "geojson" as const,
+    data: {
+      type: "Feature" as const,
+      geometry: {
+        coordinates: [
+          [
+            [139.64114960199845, 35.77501909535009],
+            [139.64114960199845, 35.6170718697025],
+            [139.90177394130632, 35.6170718697025],
+            [139.90177394130632, 35.77501909535009],
+            [139.64114960199845, 35.77501909535009],
+          ],
+        ],
+        type: "Polygon" as const,
+      },
+    },
+    polygon: {
+      color: new Color().setStyle("#001e0f"),
+      height: 55,
+      extrudedHeight: 1,
+      clampToGround: false,
+      useGroundNormals: true,
+      wireframe: false,
+      reflectivity: 0.02,
+      roughness: 0.2,
+      receiveShadow: false,
+      outlineShow: false,
+      water: true,
+      shininess: 100,
+      specularStrength: 2,
+      applyWaterNormal: false,
+      specular: true,
+      ior: 1.33333,
+      transparent: false,
+      opacity: 1.0,
+    },
+  };
+
+  let waterLayer = view.addLayer(geoJsonLayerDescription);
+
+  const waterParams = {
+    dataType: "geojson",
+    reflectivity: mvtLayerDescription.polygon?.reflectivity ?? 0,
+    roughness: mvtLayerDescription.polygon?.roughness ?? 0,
+    water: mvtLayerDescription.polygon?.water ?? true,
+    waterScaleNormal: mvtLayerDescription.polygon?.waterScaleNormal ?? 0.1,
+    waterSpeed: mvtLayerDescription.polygon?.waterSpeed ?? 0.0003,
+    shininess: mvtLayerDescription.polygon?.shininess ?? 100,
+    specularStrength: mvtLayerDescription.polygon?.specularStrength ?? 2,
+    applyWaterNormal: mvtLayerDescription.polygon?.applyWaterNormal ?? false,
+    specular: mvtLayerDescription.polygon?.specular ?? false,
+    ior: mvtLayerDescription.polygon?.ior ?? 1.33333,
+    transparent: mvtLayerDescription.polygon?.transparent ?? false,
+    opacity: mvtLayerDescription.polygon?.opacity ?? 1.0,
+  };
+
+  const fields: FolderFields<typeof waterParams> = [
+    {
+      name: "dataType",
+      params: {
+        options: [
+          { text: "geojson", value: "geojson" },
+          { text: "mvt", value: "mvt" },
+        ],
+      },
+      onChange: (v) => {
+        waterParams.dataType = v.value;
+        waterLayer.delete();
+        switch (v.value) {
+          case "mvt": {
+            waterLayer = view.addLayer(mvtLayerDescription);
+            break;
+          }
+          case "geojson": {
+            waterLayer = view.addLayer(geoJsonLayerDescription);
+            break;
+          }
+        }
+      },
+    },
+    {
+      name: "reflectivity",
+      params: { min: 0, max: 1, step: 0.01 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.reflectivity = v.value;
+        mvtLayerDescription.polygon.reflectivity = v.value;
+        geoJsonLayerDescription.polygon.reflectivity = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "roughness",
+      params: { min: 0, max: 1, step: 0.01 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.roughness = v.value;
+        mvtLayerDescription.polygon.roughness = v.value;
+        geoJsonLayerDescription.polygon.roughness = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "water",
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.water = v.value;
+        mvtLayerDescription.polygon.water = v.value;
+        geoJsonLayerDescription.polygon.water = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "waterScaleNormal",
+      params: { min: 0.01, max: 1.0, step: 0.01 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.waterScaleNormal = v.value;
+        mvtLayerDescription.polygon.waterScaleNormal = v.value;
+        geoJsonLayerDescription.polygon.waterScaleNormal = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "waterSpeed",
+      params: { min: 0.0, max: 0.01, step: 0.0001 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.waterSpeed = v.value;
+        mvtLayerDescription.polygon.waterSpeed = v.value;
+        geoJsonLayerDescription.polygon.waterSpeed = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "shininess",
+      params: { min: 0, max: 200, step: 1 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.shininess = v.value;
+        mvtLayerDescription.polygon.shininess = v.value;
+        geoJsonLayerDescription.polygon.shininess = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "specularStrength",
+      params: { min: 0, max: 10, step: 0.1 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.specularStrength = v.value;
+        mvtLayerDescription.polygon.specularStrength = v.value;
+        geoJsonLayerDescription.polygon.specularStrength = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "applyWaterNormal",
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.applyWaterNormal = v.value;
+        mvtLayerDescription.polygon.applyWaterNormal = v.value;
+        geoJsonLayerDescription.polygon.applyWaterNormal = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "specular",
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.specular = v.value;
+        mvtLayerDescription.polygon.specular = v.value;
+        geoJsonLayerDescription.polygon.specular = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "ior",
+      params: { min: 1.0, max: 2.5, step: 0.01 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.ior = v.value;
+        mvtLayerDescription.polygon.ior = v.value;
+        geoJsonLayerDescription.polygon.ior = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "transparent",
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.transparent = v.value;
+        mvtLayerDescription.polygon.transparent = v.value;
+        geoJsonLayerDescription.polygon.transparent = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+    {
+      name: "opacity",
+      params: { min: 0, max: 1, step: 0.01 },
+      onChange: (v) => {
+        if (!mvtLayerDescription.polygon || !geoJsonLayerDescription.polygon)
+          return;
+        waterParams.opacity = v.value;
+        mvtLayerDescription.polygon.opacity = v.value;
+        geoJsonLayerDescription.polygon.opacity = v.value;
+        waterLayer.update(
+          waterParams.dataType === "mvt"
+            ? mvtLayerDescription
+            : geoJsonLayerDescription,
+        );
+      },
+    },
+  ];
+
+  addFieldsToFolder(
+    pane.addFolder({ title: "Water Settings" }),
+    waterParams,
+    fields,
+  );
+};
