@@ -1161,11 +1161,13 @@ export class TextMaterial {
   get text(): string | undefined;
   set text(value: string | null | undefined);
   /**
+   * **Experimental*:
    * Specify URL for font file. Supported files are ttf, otf and woff. Default is `Roboto`.
    * Please note that this API might be replaced with another API in the future, since it loads a large font file at once.
    */
   get font(): string | undefined;
   /**
+   * **Experimental*:
    * Specify URL for font file. Supported files are ttf, otf and woff. Default is `Roboto`.
    * Please note that this API might be replaced with another API in the future, since it loads a large font file at once.
    */
@@ -1357,7 +1359,7 @@ export class Window {
   constructor(width: number, height: number, pixel_ratio: number);
   width: number;
   height: number;
-  pixel_ratio: number;
+  pixelRatio: number;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -2119,7 +2121,7 @@ export interface InitOutput {
   readonly __wbg_get_lle_height: (a: number) => number;
   readonly __wbg_get_window_width: (a: number) => number;
   readonly __wbg_get_window_height: (a: number) => number;
-  readonly __wbg_get_window_pixel_ratio: (a: number) => number;
+  readonly __wbg_get_window_pixelRatio: (a: number) => number;
   readonly __wbg_get_encodedvec3_high: (a: number) => number;
   readonly __wbg_get_encodedvec3_low: (a: number) => number;
   readonly __wbg_set_lle_lat: (a: number, b: number) => void;
@@ -2127,7 +2129,7 @@ export interface InitOutput {
   readonly __wbg_set_lle_height: (a: number, b: number) => void;
   readonly __wbg_set_window_width: (a: number, b: number) => void;
   readonly __wbg_set_window_height: (a: number, b: number) => void;
-  readonly __wbg_set_window_pixel_ratio: (a: number, b: number) => void;
+  readonly __wbg_set_window_pixelRatio: (a: number, b: number) => void;
   readonly __wbg_set_encodedvec3_high: (a: number, b: number) => void;
   readonly __wbg_set_encodedvec3_low: (a: number, b: number) => void;
   readonly __wbg_constructedpolygongeometry_free: (a: number, b: number) => void;

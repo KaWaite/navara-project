@@ -6036,6 +6036,7 @@ export class TextMaterial {
         wasm.__wbg_set_modelmaterial_url(this.__wbg_ptr, ptr0, len0);
     }
     /**
+     * **Experimental*:
      * Specify URL for font file. Supported files are ttf, otf and woff. Default is `Roboto`.
      * Please note that this API might be replaced with another API in the future, since it loads a large font file at once.
      * @returns {string | undefined}
@@ -6050,6 +6051,7 @@ export class TextMaterial {
         return v1;
     }
     /**
+     * **Experimental*:
      * Specify URL for font file. Supported files are ttf, otf and woff. Default is `Roboto`.
      * Please note that this API might be replaced with another API in the future, since it loads a large font file at once.
      * @param {string | null} [arg0]
@@ -7291,14 +7293,14 @@ export class Window {
     /**
      * @returns {number}
      */
-    get pixel_ratio() {
+    get pixelRatio() {
         const ret = wasm.__wbg_get_boundingsphere_center_z(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
-    set pixel_ratio(arg0) {
+    set pixelRatio(arg0) {
         wasm.__wbg_set_boundingsphere_center_z(this.__wbg_ptr, arg0);
     }
     /**

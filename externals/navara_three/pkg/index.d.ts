@@ -10,13 +10,13 @@ import { AxesHelper } from 'three';
 import { B3dmLayerDescription } from '@navara/engine';
 import { BillboardMaterial } from '@navara/engine';
 import { BillboardMesh as BillboardMesh_2 } from '@navara/engine';
-import { BlendFunction } from 'postprocessing';
 import { BoxGeometry } from 'three';
 import { BufferAttribute } from 'three';
 import { BufferGeometry } from 'three';
 import { BufferGeometryEventMap } from 'three';
 import { Camera } from 'three';
 import { CameraControlUpdateEvent } from '@navara/engine';
+import { CameraDirection } from '@navara/engine';
 import type { CameraFrustum as CameraFrustum_2 } from '@navara/engine-api';
 import { CameraOrientation as CameraOrientation_2 } from '@navara/engine';
 import { CanvasTexture } from 'three';
@@ -327,9 +327,32 @@ export declare function applyMaskPassRenderState(material: Material, isSilhouett
  */
 export declare function applyMaskPassSkipState(material: Material): void;
 
+/**
+ * ArcLine - Geodesic arc line renderer for 3D globe visualization
+ *
+ * Renders arc lines between geographic coordinates on a WGS84 ellipsoid using
+ * RTE (Relative-To-Eye) rendering for high precision.
+ *
+ * **Implementation:**
+ * - ECEF coordinates are calculated on CPU side and encoded as high/low precision components
+ * - Shader applies RTE transformation to maintain precision near the camera
+ * - Geodesic interpolation is performed in absolute coordinates before RTE transformation
+ *
+ * **Precision Limitations:**
+ * Due to floating-point precision constraints in the current implementation,
+ * arc lines should be approximately **2km or longer** for reliable rendering.
+ * Shorter arc lines may exhibit visual artifacts or precision issues.
+ *
+ * If future requirements need to support arc lines shorter than 2km,
+ * the implementation will need to be redesigned with:
+ * - RTC (Relative-To-Center) coordinate system per batch
+ * - Alternative interpolation strategies
+ * - Different vertex encoding schemes
+ */
 export declare class ArcLine extends Object3D {
     private readonly _config;
     private _subMeshes;
+    private _sharedRTEUniforms;
     constructor(config?: Partial<ArcLineConfig>[]);
     private initSubMeshes;
     private createSubMesh;
@@ -348,6 +371,31 @@ export declare class ArcLine extends Object3D {
      */
     private calculateArcLength;
     private fillSingleConfigAttributes;
+    /**
+     * Set instance attributes for a single arc (low-level setter)
+     */
+    private setInstanceAttributes;
+    /**
+     * Fill instance data for common attributes (params, dash, colors)
+     * Calculates arcHeight and arcLength from geometry
+     */
+    private fillInstanceCommonData;
+    /**
+     * Update arc parameters (no WASM calls)
+     * Updates: thickness, opacity, gradation, colors, dash parameters, height
+     * Reads existing arcHeight, segments, arcLength from buffer
+     */
+    private updateArcParameters;
+    /**
+     * Update arc height and length (requires WASM calls for distance/arc calculation)
+     * Updates: arcHeightScale (need to recalculate arcHeight/arcLength)
+     * Does NOT re-encode ECEF coordinates
+     */
+    private updateArcHeightAndLength;
+    /**
+     * Fill instance data for RTE mode (ECEF coordinates with high/low encoding)
+     */
+    private fillInstanceDataRTE;
     private fillSingleConfigInstanceData;
     private createMaterial;
     private updateBoundingSphere;
@@ -498,6 +546,9 @@ export declare type B3dmLayer = WithColorSupport<Layer_2<B3dmLayerDescription & 
 
 declare type BaseEventMap = Record<string, (...args: any[]) => unknown>;
 
+/**
+ * Base interface for the underlying Three.js instance created by a layer.
+ */
 declare type BaseInstance = {
     visible: boolean;
 };
@@ -616,6 +667,8 @@ export declare const calcCameraPosition: (cameraPosition: Vector3, modelMatrixWo
  * @returns Model-view matrix with translation zeroed for RTE rendering
  */
 export declare const calcModelMatrixRTE: (objectMatrixWorld: Matrix4, matrixWorldInverse: Matrix4, result?: Matrix4) => Matrix4;
+
+export { CameraDirection }
 
 export declare type CameraEvent = {
     movestart: () => void;
@@ -853,23 +906,62 @@ export declare type CloudsUpdate = LayerDescription_23 & EffectLayerUpdate;
 export declare class Color implements Color_2 {
     #private;
     /**
-     * Sets RGB. The range is: 0.0 ~ 1.0
+     * Sets the color using RGB values in sRGB color space.
+     * @param r - Red component (0.0 to 1.0)
+     * @param g - Green component (0.0 to 1.0)
+     * @param b - Blue component (0.0 to 1.0)
+     * @returns This color instance for chaining
      */
     setRGB(r: number, g: number, b: number): this;
+    /**
+     * Sets the color using RGB values in linear color space (no gamma correction).
+     * @param r - Red component (0.0 to 1.0)
+     * @param g - Green component (0.0 to 1.0)
+     * @param b - Blue component (0.0 to 1.0)
+     * @returns This color instance for chaining
+     */
     setRGBLinear(r: number, g: number, b: number): this;
     /**
-     * Sets hex color: 0xffffff
+     * Sets the color from a hexadecimal value in sRGB color space.
+     * @param hex - Hexadecimal color value (e.g., 0xff0000 for red)
+     * @returns This color instance for chaining
      */
     setHex(hex: number): this;
     /**
-     * Sets this color from a CSS context style string.
+     * Sets the color from a CSS style string in sRGB color space.
+     * @param style - CSS color string (e.g., "#ff0000", "rgb(255, 0, 0)", "red")
+     * @returns This color instance for chaining
      */
     setStyle(style: string): this;
+    /**
+     * Copies this color's values to another Color instance.
+     * @param color - Target color to copy values into
+     * @returns The target color with copied values
+     */
     copy(color: Color): this;
+    /**
+     * Creates a new Color instance with the same values.
+     * @returns A new Color instance
+     */
     clone(): this;
+    /**
+     * Returns the color as an RGB array.
+     * @returns Tuple of [red, green, blue] values (0.0 to 1.0)
+     */
     toArray(): [r: number, g: number, b: number];
+    /**
+     * Converts the color from linear to sRGB color space.
+     * @returns A new Color instance in sRGB color space
+     */
     srgb(): this;
+    /**
+     * Returns the color as a hexadecimal number.
+     * @returns Hexadecimal color value (e.g., 0xff0000 for red)
+     */
     toHex(): number;
+    /**
+     * Gets the underlying Three.js Color instance.
+     */
     get raw(): Color_3;
 }
 
@@ -1414,11 +1506,19 @@ export declare function encodeFloatToRGBA(value: number): [number, number, numbe
  */
 export declare function ensureSelectiveEffectUserData(material: MeshStandardMaterial | MeshPhysicalMaterial | MeshLambertMaterial): void;
 
+/**
+ * Material properties that can be evaluated and modified per-feature.
+ */
 declare type EvaluatableMaterialProperty = {
+    /** Feature color expression from layer configuration. */
     color: AvailableMaterialProperty["color"];
+    /** Feature visibility expression from layer configuration. */
     show: AvailableMaterialProperty["show"];
+    /** Extruded height expression from layer configuration (for polygons). */
     extrudedHeight: AvailableMaterialProperty["extrudedHeight"];
+    /** Height expression from layer configuration. */
     height: AvailableMaterialProperty["height"];
+    /** Text content expression from layer configuration (for text). */
     text: AvailableMaterialProperty["text"];
 };
 
@@ -1432,6 +1532,10 @@ declare type EvaluatedMaterialProperty = {
     text: string;
 };
 
+/**
+ * The evaluated values that can be returned from the evaluate callback.
+ * All properties are optional - only return the ones you want to modify.
+ */
 declare type EvaluatedValue = {
     [K in EvaluatableMaterialPropertyKey]: EvaluatedMaterialProperty[K];
 };
@@ -1482,25 +1586,150 @@ declare type ExtractProperties_2<T> = {
 
 export declare const FEATURE_BATCH_TEXTURE_CONFIG: BatchTextureConfig;
 
+export declare type FeatureCreatedParams = {
+    featureId: FeatureId;
+    evaluator: FeatureEvaluator;
+    credit?: string;
+};
+
+/**
+ * Provides access to feature data and allows dynamic styling of features based on their properties.
+ * Received through the `featureCreated` and `featureUpdated` events on a Layer.
+ *
+ * Use this class to:
+ * - Read feature properties from the data source
+ * - Dynamically style features based on their properties
+ *
+ * @example
+ * ```typescript
+ * // Style 3D Tiles buildings by height
+ * layer.on("featureUpdated", (evaluator) => {
+ *   evaluator.evaluate((_batchId, property) => {
+ *     const measuredHeight = property?.get("height") as number;
+ *
+ *     // Color and visibility based on building height
+ *     const color = (() => {
+ *       if (measuredHeight < 30) return new Color().setStyle("#00ff00");
+ *       if (measuredHeight < 60) return new Color().setStyle("#ffff00");
+ *       if (measuredHeight < 90) return new Color().setStyle("#ff00ff");
+ *       return new Color().setStyle("#ff0000");
+ *     })();
+ *
+ *     return {
+ *       color,
+ *       show: measuredHeight >= 30, // Hide small buildings
+ *     };
+ *   });
+ * });
+ *
+ * // Style GeoJSON polygons with extrusion based on properties
+ * layer.on("featureUpdated", (evaluator) => {
+ *   evaluator.evaluate((_batchId, property) => {
+ *     const height = (property?.get("height") as number) ?? 0;
+ *     const extrudedHeight = (property?.get("extrudedHeight") as number) ?? 0;
+ *
+ *     return {
+ *       height,
+ *       extrudedHeight,
+ *     };
+ *   });
+ * });
+ *
+ * // Re-evaluate styles
+ * const onChange = () => {
+ *   layer.forceUpdate(); // Triggers featureUpdated events
+ * };
+ * ```
+ */
 declare class FeatureEvaluator {
     private handler;
     private featureId;
     private cachedBatchedProperties?;
     private batchIds;
-    obj: Object3D;
+    /**
+     * The underlying Three.js object representing this feature.
+     * Can be used for advanced manipulation, but prefer using `evaluate()` for styling.
+     */
+    private obj;
     private result;
     constructor(handler: FeatureHandler, featureId: FeatureId, obj: Object3D);
-    get id(): bigint;
-    readFeatureProperties(): Map<string, unknown> | undefined;
     /**
-     * Evaluate feature styles by feature's property.
-     * Note that layer color is overridden by the evaluated color.
+     * Gets the unique identifier of this feature.
+     */
+    get id(): bigint;
+    /**
+     * Reads the properties of this feature from the data source.
+     * The callback is invoked for each batch within this feature.
+     *
+     * @param f - Callback function that receives batchId and the property map for each batch
+     *
+     * @example
+     * ```typescript
+     * // Log all properties
+     * evaluator.readFeatureProperties((batchId, properties) => {
+     *   console.log(`Batch ${batchId}:`, properties);
+     * });
+     *
+     * // Access nested JSON attributes (common in MVT/PLATEAU data)
+     * evaluator.readFeatureProperties((_batchId, property) => {
+     *   const attributes = JSON.parse((property?.get("attributes") as string) ?? "{}");
+     *   const minHeight = attributes["minHeight"];
+     *   const maxHeight = attributes["maxHeight"];
+     * });
+     * ```
+     */
+    readFeatureProperties(f: (batchId: number, property: Map<string, unknown> | undefined) => void): void;
+    /**
+     * Evaluates and applies dynamic styles to features based on their properties.
+     * The callback is invoked for each batch (sub-feature) within this feature.
+     *
+     * Supported style properties:
+     * - `color` - Feature color (use `new Color()`)
+     * - `show` - Feature visibility (boolean)
+     * - `height` - Feature height in meters
+     * - `extrudedHeight` - Extrusion height for polygons in meters
+     * - `text` - Label text content (for text/label features)
+     *
+     * Note: Evaluated styles override the layer's default styles.
+     *
+     * @param f - Callback function that receives batchId and properties, returns style values
+     *
+     * @example
+     * ```typescript
+     * // Color MVT features based on a category property
+     * evaluator.evaluate((_batchId, property) => {
+     *   const category = property?.get("category") as string;
+     *
+     *   const color = (() => {
+     *     if (category === "A") return "#0000ff";
+     *     if (category === "B") return "#00ff00";
+     *     return "#ff0000";
+     *   })();
+     *
+     *   return {
+     *     color: new Color().setStyle(color),
+     *   };
+     * });
+     *
+     * // Filter and style text labels
+     * evaluator.evaluate((_batchId, property) => {
+     *   const text = property?.get("name") as string;
+     *
+     *   return {
+     *     text,
+     *     show: !!text,
+     *   };
+     * });
+     * ```
      */
     evaluate(f: (batchId: number, property: Map<string, unknown> | undefined) => Partial<EvaluatedValue>): void;
     private update;
     private apply;
 }
 
+/**
+ * Callback function type for feature evaluator operations.
+ */
 export declare type FeatureEvaluatorCallback = (evaluator: FeatureEvaluator) => void;
 
 declare type FeatureHandler = {
@@ -1520,6 +1749,21 @@ export declare class FeatureMesh {
     _setFeatureHeight(_height: number): void;
     _setFrustumCulled(_culled: boolean): void;
 }
+
+export declare type FeatureRemovedParams = {
+    featureId: FeatureId;
+};
+
+export declare type FeatureUpdatedParams = {
+    featureId: FeatureId;
+    evaluator: FeatureEvaluator;
+    updatedAt: number;
+};
+
+export declare type FeatureVisibilityChangedParams = {
+    featureId: FeatureId;
+    visible: boolean;
+};
 
 export declare class FinalCopyEffectLayer extends EffectLayerDeclaration<FinalCopyPassConfig, FinalCopyPassUpdate, CopyPass> {
     static key: string;
@@ -2133,7 +2377,38 @@ export declare type LatLngHeight = Required<NormalizeWASMClass<LLE>>;
 
 declare type LatLngHeight_2 = Required<NormalizeWASMClass_2<LLE>>;
 
+/**
+ * A handle to control a resource layer (e.g., imagery, terrain, GeoJSON, 3D Tiles) after it has been added to the scene.
+ * Returned by `ThreeView.addLayer()` when adding resource layers (not mesh, light, or effect layers).
+ *
+ * Resource layers are data-driven layers that load and display geographic data from external sources.
+ * Use this handle to update layer configuration or delete the layer.
+ *
+ * @example
+ * ```typescript
+ * // Add a GeoJSON layer
+ * const geoJsonLayer = view.addLayer({
+ *   type: "geojson",
+ *   data: {
+ *     url: "https://example.com/data.geojson",
+ *   },
+ *   point: { color: 0xff0000 }
+ * });
+ *
+ * // Update the layer configuration
+ * geoJsonLayer.update({ point: { color: 0x00ff00 } });
+ *
+ * // Listen to feature events
+ * geoJsonLayer.on("featureCreated", ({ evaluator }) => {
+ *   console.log("Feature created:", evaluator);
+ * });
+ *
+ * // Delete the layer
+ * geoJsonLayer.delete();
+ * ```
+ */
 export declare class Layer extends EventHandler<LayerEvent> {
+    /** The unique identifier of this layer. */
     id: string;
     private core;
     private featureEvaluators;
@@ -2144,37 +2419,107 @@ export declare class Layer extends EventHandler<LayerEvent> {
     /* Excluded from this release type: _getFeatureEvaluator */
     /* Excluded from this release type: _unregisterFeatureEvaluator */
     /* Excluded from this release type: _processFeatureUpdates */
+    /**
+     * Marks the layer for update on the next frame.
+     * Call this when you need to trigger `featureUpdated` events.
+     */
     forceUpdate(): void;
+    /**
+     * Updates the layer configuration.
+     * The entire configuration is replaced with the new values.
+     * @param l - New layer configuration
+     */
     update(l: LayerDescription): void;
+    /**
+     * Removes the layer from the scene and disposes its resources.
+     * Emits the "deleted" event before cleanup.
+     * After calling this, the layer should no longer be used.
+     */
     delete(): void;
 }
 
 declare type Layer_2<LD> = NormalizeWASMClass<LD>;
 
+/**
+ * Abstract base class for declaration layers (mesh, light, and effect layers).
+ * Extend this class to create custom layer types.
+ *
+ * Declaration layers differ from resource layers in that they are purely client-side
+ * and don't load data from external sources. They create Three.js objects directly.
+ *
+ * @typeParam Config - Configuration type for the layer (extends LayerDeclarationConfig)
+ * @typeParam UpdateConfig - Configuration properties that can be updated (extends LayerDeclarationConfigUpdate)
+ * @typeParam Instance - The underlying Three.js object type created by the layer
+ * @typeParam CustomEvent - Additional custom events the layer can emit
+ *
+ * @example
+ * ```typescript
+ * // Creating a custom mesh layer
+ * class MyCustomMeshLayer extends LayerDeclaration<MyConfig, MyUpdateConfig, Mesh> {
+ *   onCreate() {
+ *     const geometry = new BoxGeometry(1, 1, 1);
+ *     const material = new MeshBasicMaterial();
+ *     this._instance = new Mesh(geometry, material);
+ *     this.view.scenes.opaque.add(this._instance);
+ *   }
+ * }
+ * ```
+ */
 export declare abstract class LayerDeclaration<Config extends LayerDeclarationConfig = LayerDeclarationConfig, UpdateConfig extends LayerDeclarationConfigUpdate = LayerDeclarationConfigUpdate, Instance extends BaseInstance = BaseInstance, CustomEvent extends BaseEventMap = BaseEventMap> extends EventHandler<LayerDeclarationEvents & CustomEvent> {
+    /** The unique identifier of this layer. */
     readonly id: string;
-    readonly sort?: number;
+    /** The view context providing access to scenes, camera, and other view state. */
     protected view: ViewContext;
+    /** The underlying Three.js instance created by this layer. */
     protected _instance: Instance | undefined;
     private _visible?;
     constructor(view: ViewContext, config?: Config);
+    /**
+     * Called when the layer is added to the scene. Override this to create the Three.js objects.
+     * This is where you should initialize `this._instance` and add it to the appropriate scene.
+     */
     abstract onCreate(): void;
+    /**
+     * Called when the layer configuration is updated via `LayerHandle.update()`.
+     * Override this to handle custom configuration updates.
+     * @param updates - The configuration properties being updated
+     */
     onUpdateConfig(updates: UpdateConfig): void;
+    /**
+     * Called when the layer is deleted via `LayerHandle.delete()`.
+     * Override this to clean up resources. Remember to call `super.onDestroy()`.
+     */
     onDestroy(): void;
+    /**
+     * Gets whether the layer is currently visible.
+     */
     get visible(): boolean;
+    /**
+     * Sets whether the layer should be visible.
+     */
     set visible(v: boolean);
 }
 
+/**
+ * Base configuration options common to all declaration layers.
+ */
 export declare type LayerDeclarationConfig = {
+    /** Optional custom ID for the layer. Auto-generated if not provided. */
     id?: string;
+    /** Whether the layer is visible. Defaults to true. */
     visible?: boolean;
-    sort?: number;
 };
 
+/**
+ * Configuration properties that can be updated after layer creation.
+ */
 export declare type LayerDeclarationConfigUpdate = Pick<LayerDeclarationConfig, "visible">;
 
+/**
+ * Internal events emitted by LayerDeclaration.
+ */
 declare type LayerDeclarationEvents = {
-    _needsUpdate: () => void;
+    /* Excluded from this release type: _needsUpdate */
 };
 
 export declare type LayerDescription = ResourceLayerDescription | MeshLayerDeclarationDescription | LightLayerDeclarationDescription | EffectLayerDeclarationDescription;
@@ -2190,7 +2535,7 @@ declare type LayerDescription_10 = {
         thetaStart?: number;
         thetaLength?: number;
         color?: Color;
-        emissiveColor?: number;
+        emissiveColor?: Color;
         emissiveIntensity?: number;
         opacity?: number;
         transparent?: boolean;
@@ -2210,7 +2555,7 @@ declare type LayerDescription_11 = {
         closed?: boolean;
         tension?: number;
         color?: Color;
-        emissiveColor?: number;
+        emissiveColor?: Color;
         emissiveIntensity?: number;
         opacity?: number;
         transparent?: boolean;
@@ -2228,7 +2573,7 @@ declare type LayerDescription_12 = {
         widthSegments?: number;
         heightSegments?: number;
         color?: Color;
-        emissiveColor?: number;
+        emissiveColor?: Color;
         emissiveIntensity?: number;
         opacity?: number;
         transparent?: boolean;
@@ -2411,7 +2756,7 @@ declare type LayerDescription_7 = {
         heightSegments?: number;
         depthSegments?: number;
         color?: Color;
-        emissiveColor?: number;
+        emissiveColor?: Color;
         emissiveIntensity?: number;
         opacity?: number;
         transparent?: boolean;
@@ -2432,7 +2777,7 @@ declare type LayerDescription_8 = {
         thetaStart?: number;
         thetaLength?: number;
         color?: Color;
-        emissiveColor?: number;
+        emissiveColor?: Color;
         emissiveIntensity?: number;
         opacity?: number;
         transparent?: boolean;
@@ -2522,26 +2867,87 @@ declare type LayerDescription_9 = {
     };
 };
 
+/**
+ * Events emitted by Layer. Subscribe using `layer.on(eventName, callback)`.
+ */
 export declare type LayerEvent = {
-    featureCreated: (evaluator: FeatureEvaluator) => void;
-    featureUpdated: (evaluator: FeatureEvaluator, updatedAt: number) => void;
-    afterFeatureUpdated: () => void;
+    /** Emitted when a new feature is created in this layer. */
+    featureCreated: (params: FeatureCreatedParams) => void;
+    /** Emitted when a feature in this layer is updated. */
+    featureUpdated: (params: FeatureUpdatedParams) => void;
+    /** Emitted when a feature's visibility changes. */
+    featureVisibilityChanged: (params: FeatureVisibilityChangedParams) => void;
+    /** Emitted when a feature is removed from this layer. */
+    featureRemoved: (params: FeatureRemovedParams) => void;
+    /** Emitted when the layer is deleted. */
     deleted: () => void;
 };
 
+/**
+ * A handle to control a declaration layer (mesh, light, or effect layer) after it has been added to the scene.
+ * Returned by `ThreeView.addLayer()` when adding mesh, light, or effect layers.
+ *
+ * Use this handle to update layer properties, control visibility, or delete the layer.
+ *
+ * @typeParam T - The specific layer declaration type (e.g., SkyMeshLayer, SunLightLayer)
+ *
+ * @example
+ * ```typescript
+ * // Add a sky mesh layer and get a handle
+ * const skyHandle = view.addLayer<SkyMeshLayer>({ type: "mesh", sky: {} });
+ *
+ * // Update the layer configuration
+ * skyHandle.update({ sunAngularRadius: 0.05 });
+ *
+ * // Toggle visibility
+ * skyHandle.visible = false;
+ *
+ * // Access the underlying layer instance
+ * const skyLayer = skyHandle.ref;
+ *
+ * // Delete the layer when no longer needed
+ * skyHandle.delete();
+ * ```
+ */
 export declare class LayerHandle<T extends LayerDeclaration = LayerDeclaration> extends EventHandler<LayerHandleEvent> {
     private layer;
     constructor(layer: T);
+    /**
+     * Updates the layer configuration with partial updates.
+     * Only the specified properties will be changed; others remain unchanged.
+     * @param updates - Partial configuration object with properties to update
+     */
     update(updates: T extends LayerDeclaration<infer _A, infer B> ? B : LayerDeclarationConfigUpdate): void;
+    /**
+     * Gets direct access to the underlying layer instance.
+     * Use this to access layer-specific methods and properties not exposed through the handle.
+     */
     get ref(): T;
+    /**
+     * Removes the layer from the scene and disposes its resources.
+     * After calling this, the handle should no longer be used.
+     */
     delete(): void;
+    /**
+     * Gets the unique identifier of this layer.
+     */
     get id(): string;
+    /**
+     * Gets whether the layer is currently visible in the scene.
+     */
     get visible(): boolean;
+    /**
+     * Sets whether the layer should be visible in the scene.
+     * @param visible - True to show the layer, false to hide it
+     */
     set visible(visible: boolean);
-    get sort(): number | undefined;
 }
 
+/**
+ * Events emitted by LayerHandle.
+ */
 declare type LayerHandleEvent = {
+    /** Emitted when the layer is deleted. */
     deleted: () => void;
 };
 
@@ -2701,7 +3107,11 @@ export declare type LUT = readonly (ColorTuple | Color_2)[];
 
 export declare const MAPBOX_ELEVATION_DECODER: () => ElevationDecoder;
 
+/**
+ * Mouse event extended with map coordinates at the event location.
+ */
 export declare type MapMouseEvent = {
+    /** World coordinates (ECEF) at the mouse position on the globe surface. */
     map: XYZ;
 } & MouseEvent;
 
@@ -2864,6 +3274,7 @@ export declare class ModelMesh extends Object3D<CustomObject3DEventMap> implemen
     private _layerId;
     private _uniforms?;
     private mixer;
+    credit: string | undefined;
     /**
      * Returns the shared water normal map texture if water is enabled.
      * The texture must be enabled via Options.waterTexture.enabled.
@@ -2873,7 +3284,7 @@ export declare class ModelMesh extends Object3D<CustomObject3DEventMap> implemen
     private currentAction;
     private animationSpeed;
     private lastUpdateTime?;
-    constructor(rawScene: Group, m: ModelMesh_2, uniforms: CommonUniforms, buf: BufferLoader, viewEvents: EventHandler<ViewEvents>, viewContext: ViewContext, layerId: string);
+    constructor(rawScene: Group, m: ModelMesh_2, uniforms: CommonUniforms, buf: BufferLoader, viewEvents: EventHandler<ViewEvents>, viewContext: ViewContext, layerId: string, credit?: string);
     private init;
     _initBatchedMaterial(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>): void;
     _initBatchDataTexture(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>, batchLength: number): void;
@@ -3000,26 +3411,51 @@ declare type ObservedEvent<T> = {
     changed: (v: T) => void;
 };
 
+/**
+ * Configuration options for initializing ThreeView.
+ */
 export declare type Options = {
+    /** Container element to append the canvas to. */
     container?: HTMLElement;
+    /** Canvas element for rendering. If not provided, a new canvas is created. */
     canvas?: HTMLCanvasElement | OffscreenCanvas;
+    /** Device pixel ratio override. Uses device default if not specified. */
     pixelRatio?: number;
+    /** Disables automatic resize handling on window resize events. */
     disableAutoResize?: boolean;
+    /** Enables debug mode with performance stats overlay. */
     debug?: boolean;
+    /** Atmosphere rendering configuration options. */
     atmosphere?: AtmosphereOptions;
+    /** Background color of the scene. Defaults to dark color (0x0a0a0f). */
     backgroundColor?: Color_2;
-    picking?: Picking;
+    /** Feature picking configuration. */
+    picking?: boolean;
+    /** Selective post-processing effects configuration. */
     selectiveEffects?: {
+        /** Enables debug views for selective effect masks. */
         debugViews?: boolean;
     };
+    /** When true, renders every frame. When false, renders only on changes or when forceUpdate() is called. */
     animation?: boolean;
+    /** Number of samples for MSAA (Multi-Sample Anti-Aliasing). 0 disables MSAA. */
     multisampling?: number;
+    /** Uses half-float precision for post-processing. Higher quality when true. @defaultValue true */
     halfFloat?: boolean;
+    /** Enables logarithmic depth buffer for improved depth precision at large scales. @defaultValue true */
     logarithmicDepthBuffer?: boolean;
+    /** Enables shadow mapping. Must be set at initialization time. */
     shadow?: boolean;
+    /** Enables mobile device optimizations such as lower pixel ratio. */
     mobileOptimization?: boolean;
+    /**
+     * Enables shared water texture. When enabled, a single water normal texture
+     * is loaded once and shared across all meshes that have water effects enabled.
+     */
     waterTexture?: {
+        /** Whether to enable the shared water texture. */
         enabled: boolean;
+        /** Custom water normal texture URL. Uses built-in texture if not specified. */
         url?: string;
     };
 } & GlobeOptions;
@@ -3061,10 +3497,6 @@ export declare type PickedFeature = {
     properties: Map<string, unknown>;
     batchId: Nullable<number>;
     layerId: Nullable<string>;
-};
-
-declare type Picking = {
-    enable: boolean;
 };
 
 export declare type Plane = Required<NormalizeWASMClass_2<Plane_3>>;
@@ -3715,7 +4147,7 @@ declare class SelectiveBloomPass extends Pass_2 {
 export declare type SelectiveEffectConfig = {
     effectIds: string[];
     emissiveIntensity?: number;
-    emissiveColor?: number;
+    emissiveColor?: Color_3;
     layerId?: string;
 };
 
@@ -3896,7 +4328,7 @@ export declare class SelectiveEffectManager {
     registerLayerEffects(layerId: string, effectIds: string[], selectiveEffectOcclusion?: SelectiveEffectOcclusionValue, emissiveIntensity?: number): void;
     unregisterLayerEffects(layerId: string): void;
     getLayerEffects(layerId: string): string[] | undefined;
-    setLayerEmissiveColor(layerId: string, emissiveColor: number | undefined): void;
+    setLayerEmissiveColor(layerId: string, emissiveColor: Color | undefined): void;
     updateLayerEffects(layerId: string, effectIds: string[] | undefined, emissiveIntensity?: number): void;
     private ensureConfig;
     private updateLayerEffectCaches;
@@ -4016,7 +4448,7 @@ export declare type SelectiveEffectResources = {
 export declare type SelectiveOutlineEffectConfig = {
     selectiveEffect: true;
     selectiveOutline: {
-        color?: number;
+        color?: Color_3;
         thickness?: number;
         edgeStrength?: number;
         resolutionScale?: number;
@@ -4056,7 +4488,7 @@ export declare class SelectiveOutlineEffectLayer extends SelectiveEffectLayer<Se
 
 export declare type SelectiveOutlineEffectUpdate = {
     selectiveOutline?: {
-        color?: number;
+        color?: Color_3;
         thickness?: number;
         edgeStrength?: number;
         resolutionScale?: number;
@@ -4641,7 +5073,7 @@ export declare class SSREffectLayer extends EffectLayerDeclaration<SSRConfig, SS
 }
 
 export declare type SSREffectOptions = {
-    blendFunction?: BlendFunction;
+    blendMode?: BlendMode;
     resolutionScale?: number;
     width?: number;
     height?: number;
@@ -4716,7 +5148,7 @@ export declare type SSROptions = {
     /** Amount of random jitter to reduce artifact */
     jitter?: number;
     /** Blend function for compositing reflections with the scene */
-    blendFunction?: BlendFunction;
+    blendMode?: BlendMode;
     /** Gaussian blur kernel size. Should be an odd number in the range [3, 1020]. */
     kernelSize?: number;
     /** Enable cone tracing that improves visual quality, but it might take a cost. */
@@ -4893,19 +5325,19 @@ export declare class SunLightLayer extends LightLayerDeclaration<SunLightLayerCo
     /**
      * Setup a material for CSM shadows
      */
-    setupMaterialForShadows(material: Material): void;
+    _setupMaterialForShadows(material: Material): void;
     /**
      * Remove a material from CSM shadows
      */
-    removeMaterialFromShadows(material: Material): void;
+    _removeMaterialFromShadows(material: Material): void;
     /**
      * Get CSM instance for advanced usage
      */
-    getCSM(): CascadedShadowMaps | undefined;
+    _getCSM(): CascadedShadowMaps | undefined;
     /**
      * Get CSM helper for debug visualization
      */
-    getCSMHelper(): CSMHelper | null | undefined;
+    _getCSMHelper(): CSMHelper | null | undefined;
 }
 
 export declare type SunLightLayerConfig = LightLayerConfig & LayerDescription_18;
@@ -5106,18 +5538,23 @@ declare class TexturizedSceneByTileCoordinates {
  * ```
  */
 declare class ThreeView<CustomLayerDescriptions extends Record<string, unknown> | undefined = undefined, LayerDescription extends ActualLayerDescription = CustomLayerDescriptions extends undefined ? ActualLayerDescription : ActualLayerDescription | CustomLayerDescriptions> extends EventHandler<ViewEvents> {
+    /** The camera controller that manages view position, orientation, and projection. */
     camera: ThreeViewCamera;
+    /** The Three.js WebGL renderer instance used for rendering the scene. */
     renderer: WebGLRenderer;
-    control?: {
-        update: () => void;
-        get target(): Vector3 | undefined;
-    };
+    /** The globe instance that manages terrain, imagery layers, and globe-specific settings. */
     globe: Globe_2;
+    /** The atmosphere renderer that handles sky, sun, and atmospheric scattering effects. */
     atmosphere: Atmosphere;
+    /** Layer handle for the sky environment map effect layer. Used for sky reflections. */
     skyEnvMapLayer?: LayerHandle<SkyEnvMapEffectLayer>;
+    /** Layer handle for the Multi-Render Target pass that outputs color and normal buffers. */
     mrtPassLayer: LayerHandle<MRTPassEffectLayer>;
+    /** Layer handle for the transparent objects rendering pass. */
     transparentPassLayer: LayerHandle<TransparentPassEffectLayer>;
+    /** Layer handle for the final compositing pass that outputs to screen. */
     finalPassLayer: LayerHandle<FinalCopyEffectLayer>;
+    /** The render pass orchestrator that manages the post-processing effect pipeline. */
     renderPassOrchestrator: RenderPassOrchestrator;
     private _scenes;
     private _drapedFeatureMaterials;
@@ -5149,6 +5586,7 @@ declare class ThreeView<CustomLayerDescriptions extends Record<string, unknown> 
     private layersManager;
     private shadowMapViewers;
     private registries;
+    /** Helper for managing selective post-processing effects that apply to specific objects. */
     selectiveEffectHelper: SelectiveEffectHelper;
     private viewContext;
     constructor(options?: Options);
@@ -5297,15 +5735,15 @@ declare class ThreeView<CustomLayerDescriptions extends Record<string, unknown> 
     getEffectOrder(): string[];
     /**
      * Sets the camera position and orientation instantly.
-     * @param camPos - Camera position with lng, lat, height (meters), and optional pitch, heading, roll (degrees)
+     * @param camPos - Camera position with lng (degrees), lat (degrees), height (meters), and optional pitch, heading, roll (degrees)
      */
     setCamera(camPos: CameraPosition): void;
     /**
      * Moves the camera in a specified direction.
-     * @param move - Direction: "Forward", "Backward", "Up", "Down", "Left", or "Right"
+     * @param move - Direction: `CameraDirection`
      * @param amount - Distance to move in meters
      */
-    moveCamera(move: string, amount: number): void;
+    moveCamera(move: CameraDirection, amount: number): void;
     /**
      * Moves the camera along a custom direction vector.
      * @param dir - Direction vector as [x, y, z] array
@@ -5314,33 +5752,33 @@ declare class ThreeView<CustomLayerDescriptions extends Record<string, unknown> 
     moveCameraWithDirection(dir: number[], amount: number): void;
     /**
      * Animates the camera to fly to a target position.
-     * @param camPos - Target position with required lng, lat, height (meters), and optional pitch, heading, roll (degrees)
+     * @param camPos - Target position with required lng (degrees), lat (degrees), height (meters), and optional pitch, heading, roll (degrees)
      * @param duration - Animation duration in milliseconds
      * @param maxHeight - Maximum height during the flight arc in meters
      */
     flyTo(camPos: CameraPosition & Required<Pick<CameraPosition, "lng" | "lat" | "height">>, duration?: number, maxHeight?: number): void;
     /**
      * Makes the camera look at a target position with an offset.
-     * @param target - Target geodetic position (lng, lat, height)
-     * @param offset - Offset from the target in East-North-Up (ENU) coordinates
+     * @param target - Target geodetic position (lng in degrees, lat in degrees, height in meters)
+     * @param offset - Offset from the target in East-North-Up (ENU) coordinates (meters)
      */
     lookAt(target: LatLngHeight, offset: Vector3): void;
     /**
      * Enables or disables camera following mode.
      * @param enabled - Whether to enable camera following
-     * @param target - Target geodetic position to follow (lng, lat, height in meters)
-     * @param offset - Offset from the target in East-North-Up (ENU) coordinates
+     * @param target - Target geodetic position to follow (lng in degrees, lat in degrees, height in meters)
+     * @param offset - Offset from the target in East-North-Up (ENU) coordinates (meters)
      */
     cameraFollow(enabled: boolean, target?: LatLngHeight, offset?: Vector3): void;
     /**
      * Samples the terrain height at a given geodetic position synchronously.
-     * @param pos - Geodetic position (lat, lng used; height is ignored)
+     * @param pos - Geodetic position (lat in radians, lng in radians; height is ignored)
      * @returns Terrain height in meters, or undefined if terrain data not loaded
      */
     sampleTerrainHeight(pos: LatLngHeight): number | undefined;
     /**
      * Observes terrain height changes at a position. Callback is invoked each time terrain data updates.
-     * @param pos - Geodetic position to observe (lat, lng)
+     * @param pos - Geodetic position to observe (lat in radians, lng in radians)
      * @param cb - Callback function receiving the terrain height in meters
      * @returns Cleanup function to stop observing
      */
@@ -5561,7 +5999,7 @@ export declare class ViewContext {
     emit(event: "_csmMounted" | "_csmUnmounted", material: Material): void;
     registerLayerEffects(layerId: string, effectIds: string[], selectiveEffectOcclusion?: SelectiveEffectOcclusionValue, emissiveIntensity?: number): void;
     getLayerEffects(layerId: string): string[] | undefined;
-    setLayerEmissiveColor(layerId: string, emissiveColor: number | undefined): void;
+    setLayerEmissiveColor(layerId: string, emissiveColor: Color | undefined): void;
     setLayerSelectiveEffectOcclusion(layerId: string, selectiveEffectOcclusion: SelectiveEffectOcclusionValue): void;
     clearLayerSelectiveEffectOcclusion(layerId: string): void;
     unregisterLayerEffects(layerId: string): void;
@@ -5589,38 +6027,41 @@ export declare type ViewDebugOptions = {
     selectiveEffectMask?: boolean;
 };
 
+/**
+ * Event types emitted by ThreeView. Subscribe using `view.on(eventName, callback)`.
+ */
 export declare type ViewEvents = {
+    /** Emitted when the view is resized. Receives width and height in pixels. */
     resize: (w: number, h: number) => void;
+    /** Emitted when a feature is picked. Receives picked feature info or null. */
     pick: (info: Nullable<PickedFeature>) => void;
+    /** Emitted when a layer event occurs. Receives event type, layer ID, and event arguments. */
     layer: <K extends keyof LayerEvent>(k: K, layerId: string, ...args: Parameters<LayerEvent[K]>) => void;
-    /** Emitted before an update process happens */
+    /** Emitted before an update process happens. Receives `DOMHighResTimeStamp` as a timestamp. */
     preUpdate: (t: number) => void;
-    /**
-     * Emitted after an update process happened only when any states are changed.
-     * */
+    /** Emitted after an update process when state changes occurred. Receives `DOMHighResTimeStamp` as a timestamp. */
     postUpdate: (t: number) => void;
-    /**
-     * Emitted before a rendering process happened.
-     * Enabling `animation` flag emits this event every frame.
-     * */
+    /** Emitted before rendering. With `animation: true`, fires every frame. Receives `DOMHighResTimeStamp` as a timestamp. */
     preRender: (t: number) => void;
-    /**
-     * Emitted after a rendering process happened.
-     * Enabling `animation` flag emits this event every frame.
-     * */
+    /** Emitted after rendering. With `animation: true`, fires every frame. Receives `DOMHighResTimeStamp` as a timestamp. */
     postRender: (t: number) => void;
+    /** @private Emitted when terrain height sampling completes. */
     _sample_terrain_height_received: (ev: TerrainHeightUpdatedEvent) => void;
-    /**
-     * This event injects a shader code for CSM. The shader code only executed when the shadow is enabled.
-     * You should pass a material that needs the shadow when it's initialized.
-     */
+    /** @private Emitted when a material is mounted for CSM shadows. */
     _csmMounted: (material: Material) => void;
+    /** @private Emitted when a material is unmounted from CSM shadows. */
     _csmUnmounted: (material: Material) => void;
+    /** Emitted on mouse down with map coordinates. */
     mousedown: (event: MapMouseEvent) => void;
+    /** Emitted when mouse enters the canvas with map coordinates. */
     mouseenter: (event: MapMouseEvent) => void;
+    /** Emitted when mouse leaves the canvas with map coordinates. */
     mouseleave: (event: MapMouseEvent) => void;
+    /** Emitted on mouse move with map coordinates. */
     mousemove: (event: MapMouseEvent) => void;
+    /** Emitted on mouse up with map coordinates. */
     mouseup: (event: MapMouseEvent) => void;
+    /** Emitted on click with map coordinates. */
     click: (event: MapMouseEvent) => void;
 };
 
