@@ -28,6 +28,7 @@ import { CloudLayerLike } from '@takram/three-clouds';
 import { CloudsEffect } from '@takram/three-clouds';
 import { CloudsQualityPreset } from '@takram/three-clouds';
 import { Color as Color_3 } from 'three';
+import { ConcurrencyManager } from '@navara/worker';
 import { CopyPass as CopyPass_2 } from 'postprocessing';
 import { Core } from '@navara/engine';
 import { CSMHelper } from '@navara/three_csm';
@@ -39,7 +40,6 @@ import { DepthCopyPass } from 'postprocessing';
 import { DepthOfFieldEffect } from 'postprocessing';
 import { DepthPackingStrategies } from 'three';
 import { DepthTexture } from 'three';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { Effect as Effect_2 } from 'postprocessing';
 import { EffectComposer } from 'postprocessing';
 import { EffectPass } from 'postprocessing';
@@ -47,10 +47,8 @@ import { ElevationDecoder } from '@navara/engine';
 import { FXAAEffect } from 'postprocessing';
 import { GaussianBlurPass } from 'postprocessing';
 import { GeoJsonLayerDescription } from '@navara/engine';
-import { Globe } from '@navara/engine';
-import { GLTFLoader } from 'three-stdlib';
+import { Globe as Globe_2 } from '@navara/engine';
 import { Group } from 'three';
-import { ImageLoader } from 'three';
 import { InstancedBufferGeometry } from 'three';
 import { LensFlareEffect } from '@takram/three-geospatial-effects';
 import { Light as Light_2 } from 'three';
@@ -59,7 +57,6 @@ import { LightShadow } from 'three';
 import { Line2 } from 'three-stdlib';
 import { LineMaterial } from 'three-stdlib';
 import { LLE } from '@navara/engine';
-import { Loader } from 'three';
 import { LUT3DEffect } from 'postprocessing';
 import { Material } from 'three';
 import { Matrix4 } from 'three';
@@ -69,6 +66,7 @@ import { MeshAdded } from '@navara/engine';
 import { MeshBasicMaterial } from 'three';
 import { MeshChanged } from '@navara/engine';
 import { MeshLambertMaterial } from 'three';
+import { MeshPhongMaterial } from 'three';
 import { MeshPhysicalMaterial } from 'three';
 import { MeshStandardMaterial } from 'three';
 import { ModelMaterial as ModelMaterial_2 } from '@navara/engine';
@@ -88,6 +86,7 @@ import { PntsLayerDescription } from '@navara/engine';
 import { PointMaterial } from '@navara/engine';
 import { PointMesh as PointMesh_2 } from '@navara/engine';
 import { Points } from 'three';
+import { PointsMaterial } from 'three';
 import { PolygonMaterial } from '@navara/engine';
 import { PolygonMesh as PolygonMesh_2 } from '@navara/engine';
 import { PolylineMaterial } from '@navara/engine';
@@ -101,6 +100,7 @@ import { Resolution } from 'postprocessing';
 import { ReturnedTransferablePolygonBatchedFeature } from '@navara/engine';
 import { ReturnedTransferablePolylineBatchedFeature } from '@navara/engine';
 import { Scene } from 'three';
+import { ShaderLibShader } from 'three';
 import { ShaderMaterial } from 'three';
 import { ShaderMaterialParameters } from 'three';
 import { ShaderPass } from 'postprocessing';
@@ -122,7 +122,6 @@ import { TextMesh as TextMesh_2 } from '@navara/engine';
 import { Texture } from 'three';
 import { TextureChannel } from '@takram/three-clouds';
 import { TextureDataType } from 'three';
-import { TextureLoader } from 'three';
 import { TileLayerDescription } from '@navara/engine';
 import { ToneMappingEffect } from 'postprocessing';
 import { ToneMappingMode } from 'postprocessing';
@@ -144,20 +143,6 @@ import { WebGLRenderer } from 'three';
 import { WebGLRenderTarget } from 'three';
 import type { Window as Window_3 } from '@navara/engine';
 import { Promise as WorkerPoolPromise } from '@navara/worker';
-
-export declare const ABORTABLE_IMAGE_LOADER: AbortableImageLoader;
-
-export declare const ABORTABLE_TEXTURE_LOADER: AbortableTextureLoader;
-
-declare class AbortableImageLoader extends Loader<HTMLImageElement> {
-    loadAsyncWithAbort(url: string, abort?: AbortController, onProgress?: (event: ProgressEvent) => void): Promise<HTMLImageElement>;
-    load(url: string, onLoad: (data: HTMLImageElement) => void, _onProgress?: (event: ProgressEvent) => void, onError?: (err: unknown, isAborted?: boolean) => void, abort?: AbortController, timeout?: number): HTMLImageElement;
-}
-
-declare class AbortableTextureLoader extends Loader {
-    loadAsyncWithAbort(url: string, abort?: AbortController, onProgress?: (event: ProgressEvent) => void): Promise<Texture>;
-    load(url: string, onLoad: (data: Texture) => void, onProgress?: (event: ProgressEvent) => void, onError?: (err: unknown, isAborted?: boolean) => void, abort?: AbortController): Texture;
-}
 
 export declare type AbortControllers = Map<string, AbortController>;
 
@@ -516,7 +501,13 @@ declare type Attributes = BatchedFeatureAttributes<{
 
 declare type Attributes_2 = BatchedFeatureAttributes<{
     position: BufferAttribute;
+    position_3d_high?: BufferAttribute;
+    position_3d_low?: BufferAttribute;
     start: BufferAttribute;
+    start_3d_high?: BufferAttribute;
+    start_3d_low?: BufferAttribute;
+    end_3d_high?: BufferAttribute;
+    end_3d_low?: BufferAttribute;
     normal: BufferAttribute;
     start_normal: BufferAttribute;
     right_normal_and_texture_coordinate_normalization_y: BufferAttribute;
@@ -524,6 +515,18 @@ declare type Attributes_2 = BatchedFeatureAttributes<{
     forward_offset: BufferAttribute;
     attrBatchId: BufferAttribute;
 }>;
+
+declare const AVAILABLE_SHADERS: ("standard" | "physical")[];
+
+declare type AVAILABLE_SHADERS_2 = typeof AVAILABLE_SHADERS_3;
+
+declare const AVAILABLE_SHADERS_3: ("standard" | "physical")[];
+
+declare const AVAILABLE_SHADERS_4: "lambert"[];
+
+declare type AVAILABLE_SHADERS_5 = typeof AVAILABLE_SHADERS_6;
+
+declare const AVAILABLE_SHADERS_6: "lambert"[];
 
 declare type AvailableMaterialProperty = ExtractProperties<PointMaterial & PolylineMaterial & PolygonMaterial & ModelMaterial_2 & TextMaterial>;
 
@@ -578,13 +581,20 @@ export declare class BatchedFeatureMesh<Buf extends BufferGeometry<BatchedFeatur
     _setFeatureExtrudedHeight(height: number): void;
     _setFeatureHeight(height: number): void;
     _setFrustumCulled(_culled: boolean): void;
-    _setPickable(pickable: boolean): void;
+    _setPickable(pickable: boolean, _pickingCoord?: Vector2): void;
     clone(): this;
 }
 
 export declare type BatchTextureConfig = {
     rows: BatchTextureRowKey[];
     batchLength: number;
+};
+
+declare type BatchTextureFlags = {
+    useBatchTexture?: boolean;
+    useBatchColorShow?: boolean;
+    useBatchHeight?: boolean;
+    useBatchExtrudedHeight?: boolean;
 };
 
 export declare type BatchTextureRowKey = (typeof BATCH_TEXTURE_ROW)[number];
@@ -681,9 +691,9 @@ export declare type CameraFrustum = Required<NormalizeWASMClass_2<CameraFrustum_
 
 export declare type CameraOptions = NormalizeWASMClass<CameraControlUpdateEvent>;
 
-declare type CameraOrientation = Partial<NormalizeWASMClass<CameraOrientation_2>>;
+export declare type CameraOrientation = Partial<NormalizeWASMClass<CameraOrientation_2>>;
 
-declare type CameraPosition = Partial<LatLngHeight> & CameraOrientation;
+export declare type CameraPosition = Partial<LatLngHeight> & CameraOrientation;
 
 export { CascadedShadowMaps }
 
@@ -1172,6 +1182,76 @@ export declare function createFullscreenQuad(): {
     geometry: PlaneGeometry;
 };
 
+/**
+ * Factory function to create the model material enhancer.
+ *
+ * This creates a new enhancer instance with its own internal state.
+ *
+ * @param material - The Three.js material to enhance
+ *
+ * @example
+ * ```typescript
+ * const material = new MeshStandardMaterial();
+ * const enhancer = createModelMaterialEnhancer(material);
+ *
+ * // Mount with separated base and water props
+ * enhancer.mount({
+ *   base: { color: 0xff0000, metalness: 0.5 },
+ *   water: { water: true, waterScaleNormal: 0.01 },
+ * });
+ *
+ * // Get state directly via states() - refresh after updates
+ * const { base, water } = enhancer.states();
+ *
+ * // Update mask pass state per-frame via mutates()
+ * const { base: baseMutates } = enhancer.mutates();
+ * baseMutates.setMaskPassState(bloom, outline, occlusion);
+ *
+ * // Update props (then call states() again to get fresh state)
+ * enhancer.update({ base: { height: 100 } });
+ *
+ * // Use transformShader for onBeforeCompile
+ * material.onBeforeCompile = enhancer.transformShader;
+ * ```
+ */
+declare function createModelMaterialEnhancer(material: SupportedMaterial): MaterialEnhancer<SupportedMaterial, ModelMaterialProps, ModelWaterCombinedStates, ModelWaterCombinedMutates, AVAILABLE_SHADERS_2>;
+
+/**
+ * Factory function to create the polygon material enhancer.
+ *
+ * This creates a new enhancer instance with its own internal state.
+ *
+ * @param material - The Three.js material to enhance
+ *
+ * @example
+ * ```typescript
+ * const material = new MeshLambertMaterial();
+ * const enhancer = createPolygonMaterialEnhancer(material);
+ *
+ * // Mount with separated base and water props
+ * enhancer.mount({
+ *   base: { color: 0xff0000, useRTE: true },
+ *   water: { water: true, waterScaleNormal: 0.5 },
+ * });
+ *
+ * // Get state directly via states() - refresh after updates
+ * const { base, water } = enhancer.states();
+ *
+ * // Update RTE uniforms per-frame via mutates()
+ * if (base.useRTE) {
+ *   const { base: baseMutates } = enhancer.mutates();
+ *   baseMutates.updateRteUniforms(modelViewMatrix, cameraHigh, cameraLow);
+ * }
+ *
+ * // Update props (then call states() again to get fresh state)
+ * enhancer.update({ base: { addHeight: 100 } });
+ *
+ * // Use transformShader for onBeforeCompile
+ * material.onBeforeCompile = enhancer.transformShader;
+ * ```
+ */
+export declare function createPolygonMaterialEnhancer(material: SupportedMaterial_3): MaterialEnhancer<SupportedMaterial_3, PolygonMaterialProps, PolygonWaterCombinedStates, PolygonWaterCombinedMutates, AVAILABLE_SHADERS_5>;
+
 export { CSMHelper }
 
 declare class CustomEffectPass extends EffectPass {
@@ -1209,7 +1289,7 @@ export declare class CustomRenderPass extends RenderPass {
     private allowTransparent;
     private selectiveEffectRegistry?;
     private maskController;
-    constructor(scenes: Scenes, camera: PerspectiveCamera, meshes: MeshCache, drapedFeatureMaterials: Map<string, Material>, inputBuffer: WebGLRenderTarget, globe: Globe_2, options?: CustomRenderPassOptions);
+    constructor(scenes: Scenes, camera: PerspectiveCamera, meshes: MeshCache, drapedFeatureMaterials: Map<string, Material>, inputBuffer: WebGLRenderTarget, globe: Globe, options?: CustomRenderPassOptions);
     protected _renderWithLight(renderer: WebGLRenderer, scene: Scene): void;
     render(renderer: WebGLRenderer, inputBuffer: WebGLRenderTarget | null, _outputBuffer: WebGLRenderTarget | null): void;
     setDepthTexture(depthTexture: DepthTexture): void;
@@ -1272,8 +1352,6 @@ export declare class CylinderMeshLayer extends MeshLayerDeclarationForSelectiveE
 export declare type CylinderMeshLayerConfig = MeshLayerConfigWithSelectiveEffect & LayerDescription_10;
 
 export declare type CylinderMeshLayerUpdate = MeshLayerUpdateWithSelectiveEffect & LayerDescription_10;
-
-export declare function decompressDraco(buffer: ArrayBuffer, dracoLoader: DRACOLoader): Promise<BufferGeometry | undefined>;
 
 export declare const DEFAULT_AERIAL_PERSPECTIVE_OPTIONS: Required<AerialPerspectiveOptions>;
 
@@ -1403,17 +1481,178 @@ export declare type EffectLayerConfig = {
 
 export declare type EffectLayerConstructor = new (view: ViewContext, config: EffectLayerConfig) => EffectLayerDeclaration;
 
+/**
+ * Abstract base class for creating custom post-processing effect layers.
+ *
+ * Extend this class to integrate custom effects from the `postprocessing` library into
+ * Navara's render pipeline. The base class handles pass insertion, ordering, and lifecycle.
+ *
+ * ## Implementing a Custom Effect Layer
+ *
+ * ### 1. (Optional) Create an Effect wrapper class
+ *
+ * If your effect has configurable parameters, wrap the `postprocessing` effect in a
+ * Navara {@link Effect} class with typed options and reactive setters:
+ *
+ * ```typescript
+ * import { Effect } from "@navara/three";
+ * import { VignetteEffect } from "postprocessing";
+ *
+ * type VignetteOptions = {
+ *   offset?: number;
+ *   darkness?: number;
+ * };
+ *
+ * class Vignette extends Effect<VignetteEffect, VignetteOptions> {
+ *   constructor(camera: Camera, options?: VignetteOptions) {
+ *     super(camera, new VignetteEffect({ ... }), options);
+ *   }
+ *
+ *   protected onMounted(): void {
+ *     this.offset = this.options.offset ?? 0.5;
+ *   }
+ *
+ *   get offset(): number { return this.options.offset ?? 0.5; }
+ *   set offset(v: number) {
+ *     this.options.offset = v;
+ *     if (this.rawEffect) this.rawEffect.offset = v;
+ *     this.emit("_needsUpdate");
+ *   }
+ * }
+ * ```
+ *
+ * ### 2. Define configuration types
+ *
+ * Create a description type for your effect-specific options, then merge it with
+ * the base config and update types:
+ *
+ * ```typescript
+ * type VignetteDescription = {
+ *   vignette?: { offset?: number; darkness?: number };
+ * };
+ *
+ * type VignetteEffectConfig = EffectLayerConfig & VignetteDescription;
+ * type VignetteEffectUpdate = EffectLayerUpdate & VignetteDescription;
+ * ```
+ *
+ * ### 3. Extend `EffectLayerDeclaration`
+ *
+ * Implement the {@link createPass} factory method and configure the static properties
+ * for pipeline ordering:
+ *
+ * ```typescript
+ * class VignetteEffectLayer extends EffectLayerDeclaration<
+ *   VignetteEffectConfig,
+ *   VignetteEffectUpdate,
+ *   Vignette
+ * > {
+ *   // Unique key identifying this effect type in the render pipeline.
+ *   static key = "vignette";
+ *
+ *   // Insert this effect before these passes (tries each in order).
+ *   static insertBefore = ["smaa", "fxaa", "final"];
+ *
+ *   // Set to true if multiple instances of this effect are allowed.
+ *   static allowDuplication = true;
+ *
+ *   private config: VignetteEffectConfig;
+ *
+ *   constructor(view: ViewContext, config: VignetteEffectConfig) {
+ *     super(view, config);
+ *     this.config = config;
+ *   }
+ *
+ *   createPass() {
+ *     return new Vignette(this.view.camera, this.config.vignette);
+ *   }
+ *
+ *   onUpdateConfig(updates: VignetteEffectUpdate): void {
+ *     super.onUpdateConfig(updates);
+ *     if (updates.vignette && this._instance) {
+ *       if (updates.vignette.offset !== undefined) {
+ *         this._instance.offset = updates.vignette.offset;
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * ### 4. Register and use the layer
+ *
+ * ```typescript
+ * view.registerEffect("vignette", VignetteEffectLayer);
+ *
+ * const handle = view.addLayer<VignetteEffectLayer>({
+ *   type: "effect",
+ *   vignette: { offset: 0.5, darkness: 0.5 },
+ *   visible: true,
+ * });
+ *
+ * // Update dynamically
+ * handle.update({ vignette: { offset: 0.7 } });
+ *
+ * // Remove the layer
+ * handle.delete();
+ * ```
+ *
+ * ## Static Properties for Pipeline Ordering
+ *
+ * - {@link key} - **(Required)** Unique string identifier for this effect type.
+ * - {@link insertAfter} - Array of effect keys. The pass is inserted after the first
+ *   matching key found in the pipeline.
+ * - {@link insertBefore} - Array of effect keys. Used as fallback if no `insertAfter`
+ *   target is found; inserts before the first matching key.
+ * - {@link allowDuplication} - Set to `true` to allow multiple instances of this effect.
+ *   Each instance gets a unique internal ID.
+ *
+ * If neither `insertAfter` nor `insertBefore` matches an existing pass, the effect is
+ * appended to the end of the pipeline.
+ *
+ * ## Lifecycle
+ *
+ * 1. **Construction** - The layer is instantiated with the view context and config.
+ * 2. **{@link createPass}** - Called during {@link onCreate} to create the post-processing pass.
+ *    The base class inserts it into the render pipeline based on the static ordering properties.
+ * 3. **{@link onUpdateConfig}** - Called when `handle.update()` is invoked. The base class
+ *    handles `visible`; override to handle your custom properties.
+ * 4. **{@link update}** - Optional per-frame callback for animating effect parameters.
+ * 5. **{@link onDestroy}** - Called on `handle.delete()`. The base class removes the pass
+ *    from the render pipeline.
+ *
+ * @see The `custom-effect` example page for a complete custom effect layer tutorial
+ *      implementing a vignette effect.
+ *
+ * @typeParam Config - Layer configuration type (extends {@link EffectLayerConfig})
+ * @typeParam UpdateConfig - Updatable properties (extends {@link EffectLayerUpdate})
+ * @typeParam InstanceObj - The postprocessing Pass type or a wrapper with a `raw` property
+ * @typeParam Instance - Resolved instance type (inferred automatically)
+ */
 export declare abstract class EffectLayerDeclaration<Config extends EffectLayerConfig = EffectLayerConfig, UpdateConfig extends EffectLayerUpdate = EffectLayerUpdate, InstanceObj extends EffectInstance | {
     raw: EffectInstance;
 } = EffectInstance | {
     raw: EffectInstance;
 }, Instance extends EffectBaseInstance<InstanceObj> = EffectBaseInstance<InstanceObj>> extends LayerDeclaration<Config, UpdateConfig, Instance> {
+    /** Unique identifier for this effect type in the render pipeline. Must be defined by subclasses. */
     static key: string;
+    /** Insert this pass after the first matching key found in the pipeline. */
     static insertAfter?: string[];
+    /** Insert this pass before the first matching key found (fallback if no `insertAfter` match). */
     static insertBefore?: string[];
+    /** Set to `true` to allow multiple instances of this effect in the pipeline. */
     static allowDuplication?: boolean;
     private instanceId;
     constructor(view: ViewContext, config?: Config);
+    /**
+     * Factory method to create the post-processing pass instance.
+     *
+     * Override this to return your custom effect. The returned object can be either:
+     * - A `postprocessing` `Pass` directly
+     * - A Navara {@link Pass} wrapper (extends `postprocessing` Pass with typed options)
+     * - A wrapper object with a `raw` property containing the pass
+     *
+     * The base class calls this during {@link onCreate} and automatically inserts
+     * the pass into the render pipeline.
+     */
     abstract createPass(): Instance;
     get raw(): Instance | undefined;
     getConstructor(): typeof EffectLayerDeclaration;
@@ -1424,7 +1663,18 @@ export declare abstract class EffectLayerDeclaration<Config extends EffectLayerC
     private insertPass;
     onUpdateConfig(updates: UpdateConfig): void;
     onDestroy(): void;
+    /**
+     * Optional per-frame update callback.
+     * Override this to animate effect parameters over time.
+     * @param time - Render-loop timestamp in milliseconds (same as the `requestAnimationFrame` time).
+     */
     update?(time: number): void;
+    /**
+     * Finds another effect layer in the pipeline by its static `key`.
+     * Useful for cross-effect communication (e.g. reading another effect's state).
+     * @param key - The static `key` of the effect layer to find.
+     * @returns The effect layer instance, or `undefined` if not found.
+     */
     findLayer<Layer extends EffectLayerDeclaration = EffectLayerDeclaration>(key: string): Layer | undefined;
 }
 
@@ -1500,6 +1750,15 @@ export declare class EllipsoidGeodesic {
 
 export declare function encodeFloatToRGBA(value: number): [number, number, number, number];
 
+/** Enhanced material wrapper */
+export declare type EnhancedMaterial<M extends Material, Props, States = unknown, Mutates = unknown> = {
+    material: M;
+    mount: (props: Props) => void;
+    update: (props: Props) => void;
+    states: () => States;
+    mutates: () => Mutates;
+};
+
 /**
  * Initialize shader uniforms for SelectiveEffect on material.userData.
  * Values are 0 by default, set during mask passes via onBeforeRender.
@@ -1509,7 +1768,7 @@ export declare function ensureSelectiveEffectUserData(material: MeshStandardMate
 /**
  * Material properties that can be evaluated and modified per-feature.
  */
-declare type EvaluatableMaterialProperty = {
+export declare type EvaluatableMaterialProperty = {
     /** Feature color expression from layer configuration. */
     color: AvailableMaterialProperty["color"];
     /** Feature visibility expression from layer configuration. */
@@ -1536,7 +1795,7 @@ declare type EvaluatedMaterialProperty = {
  * The evaluated values that can be returned from the evaluate callback.
  * All properties are optional - only return the ones you want to modify.
  */
-declare type EvaluatedValue = {
+export declare type EvaluatedValue = {
     [K in EvaluatableMaterialPropertyKey]: EvaluatedMaterialProperty[K];
 };
 
@@ -1554,7 +1813,7 @@ declare type EvaluatedValue = {
  */
 export declare function evaluateMaskPassParticipation(config: SelectiveEffectConfig | undefined, registry: SelectiveEffectHelper | undefined, layerId: string | undefined, ctx: MaskPassContext): MaskPassEvaluation;
 
-declare class EventHandler<T extends BaseEventMap = BaseEventMap, K extends keyof T = keyof T> {
+export declare class EventHandler<T extends BaseEventMap = BaseEventMap, K extends keyof T = keyof T> {
     events: {
         [E in K]?: Set<T[E]>;
     };
@@ -1641,7 +1900,7 @@ export declare type FeatureCreatedParams = {
  * };
  * ```
  */
-declare class FeatureEvaluator {
+export declare class FeatureEvaluator {
     private handler;
     private featureId;
     private cachedBatchedProperties?;
@@ -2056,7 +2315,7 @@ export declare function getWGS84SemiMinorAxis(): number;
  * Provides an interface for accessing and modifying globe properties
  * that are shared across different material types (VectorTile, RasterTile, RasterTerrain).
  */
-declare class Globe_2 implements Omit<Globe, "free" | "elevationColormap" | "color"> {
+export declare class Globe implements Omit<Globe_2, "free" | "elevationColormap" | "color"> {
     private handler;
     private _elevationColormap?;
     constructor(handler: GlobeHandler, options?: GlobeOptions);
@@ -2106,7 +2365,7 @@ declare type GlobeHandler = {
     setElevationColormap: (value: ColorMap) => void;
 };
 
-declare type GlobeOptions = Partial<Omit<Globe, "constructor" | "free" | "elevationColormap" | "color">> & {
+declare type GlobeOptions = Partial<Omit<Globe_2, "constructor" | "free" | "elevationColormap" | "color">> & {
     elevationColormap?: ColorMap;
     color?: Color_2;
 };
@@ -2287,18 +2546,12 @@ export declare function hasSelectiveEffectConfig(obj: unknown): obj is {
  */
 export declare function hasSelectiveOutlineEffect(config: SelectiveEffectConfig | undefined, registry?: SelectiveEffectHelper): boolean;
 
-export declare const IMAGE_LOADER: ImageLoader;
-
 export declare function initBatchDataTexture(material: Material, config: BatchTextureConfig): void;
 
 /**
  * Set batched texture rows to the material.
  */
 export declare function initBatchedMaterial(material: Material, config: BatchTextureConfig): void;
-
-export declare const initializeDracoLoader: () => DRACOLoader;
-
-export declare const initializeGltfLoader: () => GLTFLoader;
 
 /**
  * Initializes the Navara API WASM module. Must be called before using other API functions.
@@ -3062,6 +3315,107 @@ export declare type LightLayerConfig = {
 
 export declare type LightLayerConstructor = new (view: ViewContext, config: LightLayerConfig) => LightLayerDeclaration;
 
+/**
+ * Abstract base class for creating custom light layers.
+ *
+ * Extend this class to add custom Three.js lights (directional, point, spot, ambient, etc.)
+ * to the Navara scene. The light is automatically added to `view.scenes.light` and
+ * position synchronization is handled by the base class.
+ *
+ * ## Implementing a Custom Light Layer
+ *
+ * ### 1. Define configuration types
+ *
+ * Create a description type for your light-specific options, then merge it with the
+ * base config and update types:
+ *
+ * ```typescript
+ * type MyLightDescription = {
+ *   myLight?: {
+ *     intensity?: number;
+ *     color?: Color;
+ *   };
+ * };
+ *
+ * type MyLightConfig = LightLayerConfig & MyLightDescription;
+ * type MyLightUpdate = LightLayerUpdate & MyLightDescription;
+ * ```
+ *
+ * ### 2. Extend `LightLayerDeclaration`
+ *
+ * Implement the {@link createLight} factory method. Optionally override
+ * {@link onUpdateConfig} for dynamic property updates and {@link update} for
+ * per-frame animation.
+ *
+ * ```typescript
+ * class MyLightLayer extends LightLayerDeclaration<
+ *   MyLightConfig,
+ *   MyLightUpdate,
+ *   PointLight
+ * > {
+ *   private config: MyLightConfig;
+ *
+ *   constructor(view: ViewContext, config: MyLightConfig) {
+ *     super(view, config);
+ *     this.config = config;
+ *   }
+ *
+ *   createLight() {
+ *     const cfg = this.config.myLight ?? {};
+ *     return new PointLight(
+ *       cfg.color?.raw ?? 0xffffff,
+ *       cfg.intensity ?? 1,
+ *     );
+ *   }
+ *
+ *   onUpdateConfig(updates: MyLightUpdate): void {
+ *     super.onUpdateConfig(updates);
+ *     if (updates.myLight && this._instance) {
+ *       if (updates.myLight.intensity !== undefined) {
+ *         this._instance.intensity = updates.myLight.intensity;
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * ### 3. Register and use the layer
+ *
+ * ```typescript
+ * view.registerLight("myLight", MyLightLayer);
+ *
+ * const handle = view.addLayer<MyLightLayer>({
+ *   type: "light",
+ *   position: { x: 0, y: 100, z: 0 },
+ *   myLight: { intensity: 2, color: new Color("#ff0000") },
+ * });
+ *
+ * // Update dynamically
+ * handle.update({ myLight: { intensity: 0.5 } });
+ *
+ * // Remove the layer
+ * handle.delete();
+ * ```
+ *
+ * ## Lifecycle
+ *
+ * 1. **Construction** - The layer is instantiated with the view context and config.
+ * 2. **{@link createLight}** - Called during {@link onCreate} to create the Three.js light.
+ *    The base class adds it to `view.scenes.light` and applies the initial position.
+ * 3. **{@link onUpdateConfig}** - Called when `handle.update()` is invoked. The base class
+ *    handles `visible` and `position`; override to handle your custom properties.
+ * 4. **{@link update}** - Optional per-frame callback for animation (e.g. moving lights).
+ * 5. **{@link onDestroy}** - Called on `handle.delete()`. The base class removes the light
+ *    from its parent scene.
+ *
+ * @see {@link AmbientLightLayer} for a minimal built-in example.
+ * @see {@link SunLightLayer} for an advanced example with CSM shadows and atmosphere integration.
+ *
+ * @typeParam Config - Layer configuration type (extends {@link LightLayerConfig})
+ * @typeParam UpdateConfig - Updatable properties (extends {@link LightLayerUpdate})
+ * @typeParam InstanceObj - The Three.js Light type or a wrapper with a `raw` property
+ * @typeParam Instance - Resolved instance type (inferred automatically)
+ */
 export declare abstract class LightLayerDeclaration<Config extends LightLayerConfig = LightLayerConfig, UpdateConfig extends LightLayerUpdate = LightLayerUpdate, InstanceObj extends Light_2 | {
     raw: Light_2;
 } = Light_2 | {
@@ -3069,6 +3423,16 @@ export declare abstract class LightLayerDeclaration<Config extends LightLayerCon
 }, Instance extends LightBaseInstance<InstanceObj> = LightBaseInstance<InstanceObj>> extends LayerDeclaration<Config, UpdateConfig, Instance> {
     position?: XYZ;
     constructor(view: ViewContext, config?: Config);
+    /**
+     * Factory method to create the Three.js light instance.
+     *
+     * Override this to return your custom light. The returned object can be either:
+     * - A Three.js `Light` directly (e.g. `PointLight`, `DirectionalLight`)
+     * - A wrapper object with a `raw` property containing the `Light`
+     *
+     * The base class calls this during {@link onCreate} and automatically adds the
+     * light to `view.scenes.light`.
+     */
     abstract createLight(): Instance;
     get raw(): (Instance extends Light_2<LightShadow<Camera> | undefined> ? Instance : never) | (Instance extends {
         raw: infer Raw extends Light_2;
@@ -3076,6 +3440,12 @@ export declare abstract class LightLayerDeclaration<Config extends LightLayerCon
     onCreate(): void;
     onUpdateConfig(updates: UpdateConfig): void;
     onDestroy(): void;
+    /**
+     * Optional per-frame update callback.
+     * Override this to animate the light (e.g. orbiting, flickering, color shifts).
+     * @param time - High-resolution timestamp (in milliseconds) provided by the render loop,
+     *   the same value passed to `requestAnimationFrame` callbacks.
+     */
     update?(time: number): void;
 }
 
@@ -3166,6 +3536,43 @@ export declare const MaskPassPhase: {
 
 export declare type MaskPassPhaseType = (typeof MaskPassPhase)[keyof typeof MaskPassPhase];
 
+/**
+ * Core abstraction: Material enhancer with shader type constraints
+ *
+ * A MaterialEnhancer encapsulates a single material feature and declares which shaders it supports.
+ *
+ * The enhancer separates concerns into three categories:
+ * - **State** (immutable): Configuration flags and values that define behavior.
+ *   Always replaced as a whole when updated (never mutated). Returned directly via `states()`.
+ * - **Refs** (mutable, internal): Uniform value objects (`{ value: T }`) that are shared
+ *   references with shader.uniforms. Hidden inside mutates, synced from state via `mutates().update(state)`.
+ * - **Mutates** (mutation functions): Functions exposed via `mutates()` for controlled
+ *   mutation of internal refs. Always includes `update(state)` to sync refs from state.
+ *
+ * The material is passed to the factory function when creating the enhancer,
+ * and is exposed via the `material` property for composed enhancers to reference.
+ */
+export declare type MaterialEnhancer<M extends Material, Props, States = unknown, Mutates = unknown, Shaders extends readonly ShaderName[] = readonly ShaderName[]> = {
+    /** The Three.js material being enhanced */
+    readonly material: M;
+    /** Declares which shaders this enhancer is compatible with */
+    readonly availableShaders: Shaders;
+    /** Called once during shader compilation - assigns internal refs to shader.uniforms */
+    transformShader: (shader: WebGLProgramParametersWithUniforms) => void;
+    /** Called once after creation - initializes internal state with props */
+    mount: (props: Props) => void;
+    /** Called on every props update - updates internal state and refs */
+    update: (props: Props) => void;
+    /** Get the current state directly (no getters - refresh after updates) */
+    states: () => States;
+    /** Get mutation functions for controlled updates to internal refs */
+    mutates: () => Mutates;
+    /** Returns cache key based on state affecting shader defines. Used with material.customProgramCacheKey */
+    programCacheKey: () => string;
+};
+
+export declare type MaterialsFromShaders<S extends readonly ShaderName[]> = ShaderToMaterial[S[number]];
+
 declare type MeshBaseInstance<Instance extends object = object> = Instance extends Object3D ? Instance : Instance extends {
     raw: infer Raw extends Object3D;
 } ? Instance & {
@@ -3188,6 +3595,140 @@ export declare type MeshLayerConfigWithSelectiveEffect = MeshLayerConfig & {
 
 export declare type MeshLayerConstructor<TConfig extends MeshLayerConfig = MeshLayerConfig> = new (view: ViewContext, config: TConfig) => MeshLayerDeclaration;
 
+/**
+ * Abstract base class for creating custom mesh layers.
+ *
+ * Extend this class to add custom Three.js 3D objects (meshes, groups, particles, etc.)
+ * to the Navara scene. The base class handles position/scale/rotation synchronization
+ * and automatic scene management via {@link getPassKey}.
+ *
+ * ## Implementing a Custom Mesh Layer
+ *
+ * ### 1. Define configuration types
+ *
+ * Create a description type for your mesh-specific options, then merge it with the
+ * base config and update types:
+ *
+ * ```typescript
+ * type MyMeshDescription = {
+ *   myMesh?: {
+ *     radius?: number;
+ *     color?: Color;
+ *     castShadow?: boolean;
+ *   };
+ * };
+ *
+ * type MyMeshConfig = MeshLayerConfig & MyMeshDescription;
+ * type MyMeshUpdate = MeshLayerUpdate & MyMeshDescription;
+ * ```
+ *
+ * ### 2. Extend `MeshLayerDeclaration`
+ *
+ * Implement the {@link createMesh} factory method. Optionally override
+ * {@link getPassKey} to control which render scene the mesh belongs to,
+ * {@link onUpdateConfig} for dynamic updates, and {@link update} for animation.
+ *
+ * ```typescript
+ * class MyMeshLayer extends MeshLayerDeclaration<
+ *   MyMeshConfig,
+ *   MyMeshUpdate,
+ *   Mesh<SphereGeometry, MeshStandardMaterial>
+ * > {
+ *   private config: MyMeshConfig;
+ *
+ *   constructor(view: ViewContext, config: MyMeshConfig) {
+ *     super(view, config);
+ *     this.config = config;
+ *   }
+ *
+ *   createMesh() {
+ *     const cfg = this.config.myMesh ?? {};
+ *     const geometry = new SphereGeometry(cfg.radius ?? 1);
+ *     const material = new MeshStandardMaterial({
+ *       color: cfg.color?.raw ?? 0xffffff,
+ *     });
+ *     const mesh = new Mesh(geometry, material);
+ *     mesh.castShadow = cfg.castShadow ?? false;
+ *
+ *     // Enable CSM shadows if needed
+ *     if (mesh.castShadow) {
+ *       this.view.emit("_csmMounted", material);
+ *     }
+ *
+ *     return mesh;
+ *   }
+ *
+ *   onUpdateConfig(updates: MyMeshUpdate): void {
+ *     if (updates.myMesh && this._instance) {
+ *       if (updates.myMesh.color !== undefined) {
+ *         this._instance.material.color.set(updates.myMesh.color.raw);
+ *       }
+ *       this.emit("_needsUpdate");
+ *     }
+ *     super.onUpdateConfig(updates);
+ *   }
+ * }
+ * ```
+ *
+ * ### 3. Register and use the layer
+ *
+ * ```typescript
+ * view.registerMesh("myMesh", MyMeshLayer);
+ *
+ * const handle = view.addLayer<MyMeshLayer>({
+ *   type: "mesh",
+ *   position: { x: 0, y: 100, z: 0 },
+ *   scale: { x: 10, y: 10, z: 10 },
+ *   rotation: { x: 0, y: Math.PI / 4, z: 0 },
+ *   myMesh: { radius: 5, color: new Color("#00ff00") },
+ * });
+ *
+ * // Update dynamically
+ * handle.update({ myMesh: { color: new Color("#ff0000") } });
+ *
+ * // Access the raw Three.js object for direct manipulation
+ * const mesh = handle.ref.raw;
+ *
+ * // Animate on every frame
+ * view.on("preUpdate", (time) => {
+ *   mesh.rotation.y += 0.01;
+ * });
+ *
+ * // Remove the layer
+ * handle.delete();
+ * ```
+ *
+ * ## Render Scenes (Pass Keys)
+ *
+ * Override {@link getPassKey} to control which render scene the mesh is added to:
+ * - `"opaque"` (default) - Standard opaque rendering with depth testing.
+ * - `"transparent"` - Transparent rendering pass.
+ * - `"mrt"` - Multiple Render Target scene, used for selective effects (bloom, outline).
+ * - `"skyEnvMap"` - Sky environment map scene.
+ *
+ * ## Lifecycle
+ *
+ * 1. **Construction** - The layer is instantiated with the view context and config.
+ * 2. **{@link createMesh}** - Called during {@link onCreate} to create the Three.js object.
+ *    The base class applies position/scale/rotation and adds it to the scene
+ *    determined by {@link getPassKey}.
+ * 3. **{@link onUpdateConfig}** - Called when `handle.update()` is invoked. The base class
+ *    handles `visible`, `position`, `scale`, and `rotation`; override to handle your
+ *    custom properties. Always call `super.onUpdateConfig(updates)`.
+ * 4. **{@link update}** - Optional per-frame callback for animation.
+ * 5. **{@link onResize}** - Optional callback when the viewport is resized.
+ * 6. **{@link onDestroy}** - Called on `handle.delete()`. The base class removes the mesh
+ *    from its parent scene. Override to dispose geometry/material resources.
+ *
+ * @see The `custom-shader` example page for a complete custom mesh layer tutorial using
+ *      MarchingCubes with a custom shader material.
+ *
+ * @typeParam Config - Layer configuration type (extends {@link MeshLayerConfig})
+ * @typeParam UpdateConfig - Updatable properties (extends {@link MeshLayerUpdate})
+ * @typeParam InstanceObj - The Three.js Object3D type or a wrapper with a `raw` property
+ * @typeParam CustomEvent - Additional custom events the layer can emit
+ * @typeParam Instance - Resolved instance type (inferred automatically)
+ */
 export declare abstract class MeshLayerDeclaration<Config extends MeshLayerConfig = MeshLayerConfig, UpdateConfig extends MeshLayerUpdate = MeshLayerUpdate, InstanceObj extends Object3D | {
     raw: Object3D;
 } = Object3D | {
@@ -3198,7 +3739,23 @@ export declare abstract class MeshLayerDeclaration<Config extends MeshLayerConfi
     rotation?: XYZ;
     private prevPassKey?;
     constructor(view: ViewContext, config?: Config);
+    /**
+     * Determines which render scene the mesh is added to.
+     * Override this to change the rendering pass for your mesh.
+     *
+     * @returns The pass key: `"opaque"` (default), `"transparent"`, `"mrt"`, or `"skyEnvMap"`.
+     */
     protected getPassKey(): PassKey;
+    /**
+     * Factory method to create the Three.js 3D object.
+     *
+     * Override this to return your custom mesh. The returned object can be either:
+     * - A Three.js `Object3D` directly (e.g. `Mesh`, `Group`, `Points`)
+     * - A wrapper object with a `raw` property containing the `Object3D`
+     *
+     * The base class calls this during {@link onCreate} and automatically applies
+     * position, scale, rotation, and adds the object to the appropriate scene.
+     */
     abstract createMesh(): Instance;
     get raw(): (Instance extends Object3D<Object3DEventMap> ? Instance : never) | (Instance extends {
         raw: infer Raw extends Object3D;
@@ -3209,7 +3766,19 @@ export declare abstract class MeshLayerDeclaration<Config extends MeshLayerConfi
     onUpdateConfig(updates: UpdateConfig): void;
     onPassKeyChange(): void;
     onDestroy(): void;
+    /**
+     * Optional per-frame update callback.
+     * Override this to animate the mesh (e.g. rotation, morph targets, shader uniforms).
+     * @param time - High-resolution timestamp from the main render loop (same value passed
+     *   to `requestAnimationFrame`), in milliseconds.
+     */
     update?(time: number): void;
+    /**
+     * Optional callback when the viewport is resized.
+     * Override this to adjust the mesh based on viewport dimensions.
+     * @param width - New viewport width in pixels.
+     * @param height - New viewport height in pixels.
+     */
     onResize?(width: number, height: number): void;
 }
 
@@ -3262,35 +3831,110 @@ export declare type MeshLayerUpdateWithSelectiveEffect = MeshLayerUpdate & {
 
 export declare const MODEL_BATCH_TEXTURE_CONFIG: BatchTextureConfig;
 
-export declare type ModelBatchedAttributeName = "color" | "show" | "height";
+/**
+ * Mutation functions for the model base enhancer.
+ * Includes `update(state)` to sync refs from state, plus additional methods.
+ */
+declare type ModelBaseMutates = Mutates<ModelBaseState, ModelBaseUniforms, {
+    /**
+     * Set the batch data texture ref.
+     * This is needed because batchDataTexture is an external ref passed via props.
+     */
+    setBatchDataTexture: (texture: UniformValue<Texture | null>) => void;
+}>;
+
+/**
+ * Props for the model base enhancer.
+ */
+declare type ModelBaseProps = {
+    color?: number;
+    metalness?: number;
+    roughness?: number;
+    emissiveColor?: number;
+    emissiveIntensity?: number;
+    pickable?: boolean;
+    batchDataTexture?: UniformValue<Texture | null>;
+    batchColorEnabled?: boolean;
+    bloom?: boolean;
+    outline?: boolean;
+    occlusion?: SelectiveEffectOcclusionValue;
+} & Omit<BatchTextureFlags, "useBatchExtrudedHeight" | "useBatchHeight">;
+
+/**
+ * Mutable references (uniforms) for the model base enhancer.
+ *
+ * These are shared references with shader.uniforms and can be mutated directly
+ * for efficient GPU uniform updates without shader recompilation.
+ * Internal type - not exposed externally.
+ */
+declare type ModelBaseRefs = {
+    nvr_uPickable: UniformValue<number>;
+    uBloomMaskPass: UniformValue<number>;
+    uOutlineMaskPass: UniformValue<number>;
+    uSelectiveEffectOcclusion: UniformValue<SelectiveEffectOcclusionValue>;
+    batchDataTexture?: UniformValue<Texture | null>;
+};
+
+/**
+ * Immutable state for the model base enhancer.
+ * This state is always replaced as a whole (never mutated).
+ * Returned directly via states() - refresh after updates.
+ */
+declare type ModelBaseState = Readonly<{
+    pickable: boolean;
+    batchColorEnabled: boolean;
+    useBatchTexture: boolean;
+    useBatchColorShow: boolean;
+    bloom: boolean;
+    outline: boolean;
+    occlusion: SelectiveEffectOcclusionValue;
+}>;
+
+declare type ModelBaseUniforms = Partial<ModelBaseRefs>;
+
+export declare type ModelBatchedAttributeName = "color" | "show";
 
 export declare type ModelMaterial = MeshStandardMaterial | MeshPhysicalMaterial;
 
+declare type ModelMaterialEnhancer = ReturnType<typeof createModelMaterialEnhancer>;
+
+/**
+ * Combined props for the model material enhancer.
+ * Props are explicitly separated into base and water sections for clarity.
+ */
+declare type ModelMaterialProps = {
+    base?: ModelBaseProps;
+    water?: ModelWaterOnlyProps;
+};
+
 export declare class ModelMesh extends Object3D<CustomObject3DEventMap> implements FeatureMesh, PickableMesh {
-    water: boolean;
-    private waterNormalMapTexture;
     private viewContext;
     /** Layer ID for SelectiveEffect handling */
     private _layerId;
-    private _uniforms?;
+    private _uniforms;
+    /** Enhanced materials with encapsulated state, one per child mesh */
+    private _enhancers;
+    /** Enhanced materials for point cloud objects, one per Points child */
+    private _pntsEnhancers;
     private mixer;
     credit: string | undefined;
-    /**
-     * Returns the shared water normal map texture if water is enabled.
-     * The texture must be enabled via Options.waterTexture.enabled.
-     */
-    private enableWaterNormalMap;
     private actions;
     private currentAction;
     private animationSpeed;
     private lastUpdateTime?;
-    constructor(rawScene: Group, m: ModelMesh_2, uniforms: CommonUniforms, buf: BufferLoader, viewEvents: EventHandler<ViewEvents>, viewContext: ViewContext, layerId: string, credit?: string);
+    private prevEffectIds;
+    constructor(gltfInfo: {
+        scene: Group;
+        credit?: string;
+        animations?: AnimationClip[];
+    }, m: ModelMesh_2, uniforms: CommonUniforms, buf: BufferLoader, viewEvents: EventHandler<ViewEvents>, viewContext: ViewContext, layerId: string);
+    get water(): boolean;
+    set water(v: boolean);
     private init;
     _initBatchedMaterial(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>): void;
     _initBatchDataTexture(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>, batchLength: number): void;
     _getBatchDataTexture(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>): DataTexture | undefined;
     _updateBatchAttribute(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>, batchId: number, attribute: ModelBatchedAttributeName, value: number | number[] | boolean): void;
-    setupWaterMaterial(mesh: Mesh<BufferGeometry, Material>, meshMaterial: ModelMaterial_2): void;
     private overrideCesium3DTilesMaterial;
     /**
      * Setup onBeforeRender callback for a mesh to handle SelectiveEffect rendering
@@ -3309,22 +3953,20 @@ export declare class ModelMesh extends Object3D<CustomObject3DEventMap> implemen
      * Called during BaseMRT phase for context-based self-determination.
      *
      * Uses shared helper for evaluation and render state, then applies
-     * model-specific shader uniforms for future custom shader support.
+     * model-specific shader uniforms via enhancer mutates.
      */
     private applyMaskPassState;
-    /**
-     * Set material state to skip mask pass rendering.
-     * Used when mesh doesn't contribute to current pass.
-     */
-    private setMaskPassSkipState;
     private traversePoints;
     private overridePntsMaterial;
     /**
      * Override a material that is used to generate a shadow map.
      */
-    initDepthMaterial(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>): void;
+    initDepthMaterial(mesh: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>, enhancer: ModelMaterialEnhancer): void;
     _update(material: ModelMaterial_2, active: boolean): void;
-    private setMaterial;
+    /**
+     * Build update props from NavaraModelMaterial for enhancer.update().
+     */
+    private buildUpdateProps;
     traverseMesh(callback: (m: Mesh<BufferGeometry<NormalBufferAttributes>, ModelMaterial>) => void): void;
     _setFeatureColor(color: Color_3, m?: ModelMaterial): void;
     _getFeatureColor(): Color_3;
@@ -3332,9 +3974,108 @@ export declare class ModelMesh extends Object3D<CustomObject3DEventMap> implemen
     _setFeatureExtrudedHeight(_height: number): void;
     _setFrustumCulled(culled: boolean): void;
     _setPickable(pickable: boolean): void;
-    _setFeatureHeight(height: number, m?: ModelMaterial): void;
+    _setFeatureHeight(_height: number): void;
     dispose(viewEvents: EventHandler<ViewEvents>): void;
 }
+
+/**
+ * Combined mutation functions for the model water enhancer.
+ */
+declare type ModelWaterCombinedMutates = {
+    readonly base: ModelBaseMutates;
+    readonly water: ModelWaterMutates;
+};
+
+/**
+ * Combined state for the model water enhancer.
+ * Includes both base state and water-specific state.
+ */
+declare type ModelWaterCombinedStates = {
+    readonly base: ModelBaseState;
+    readonly water: ModelWaterState;
+};
+
+/**
+ * Mutation functions for the water enhancer (internal only).
+ */
+declare type ModelWaterMutates = Mutates<ModelWaterState, ModelWaterUniforms, {
+    /**
+     * Set the water normal map uniform ref.
+     * Assigns the external ref object (identity doesn't change after mount).
+     */
+    setWaterNormalMap: (waterNormalMapUniform: UniformValue<Texture | null>, useWater: boolean) => void;
+    /**
+     * Set the time uniform ref.
+     * Assigns the external ref object (identity doesn't change after mount).
+     */
+    setTimeUniform: (timeUniform: UniformValue<number>) => void;
+    /**
+     * Set the sky env map uniform ref.
+     * Assigns the external ref object (identity doesn't change after mount).
+     */
+    setSkyEnvMapUniform: (skyEnvMapUniform: UniformValue<Texture | null>) => void;
+}>;
+
+/**
+ * Water-only props (excluding base props).
+ */
+declare type ModelWaterOnlyProps = {
+    water?: boolean;
+    waterScaleNormal?: number;
+    waterSpeed?: number;
+    shininess?: number;
+    specularStrength?: number;
+    applyWaterNormal?: number | boolean;
+    specular?: boolean;
+    ior?: number;
+    reflectivity?: number;
+    skyEnvMap?: Texture | null;
+    waterNormalMap?: UniformValue<Texture | null>;
+    timeUniform?: UniformValue<number>;
+    skyEnvMapUniform?: UniformValue<Texture | null>;
+};
+
+/**
+ * Mutable references (uniforms) for the water enhancer.
+ *
+ * These are shared references with shader.uniforms and can be mutated directly
+ * for efficient GPU uniform updates without shader recompilation.
+ * Internal type - not exposed externally.
+ */
+declare type ModelWaterRefs = {
+    reflectivity: UniformValue<number>;
+    uWaterNormalMap: UniformValue<Texture | null>;
+    cachedWaterNormalMap: UniformValue<Texture | null>;
+    uWaterScaleNormal: UniformValue<number>;
+    uWaterSpeed: UniformValue<number>;
+    uShininess: UniformValue<number>;
+    uSpecularStrength: UniformValue<number>;
+    uApplyWaterNormal: UniformValue<number>;
+    uSpecular: UniformValue<boolean>;
+    uIor: UniformValue<number>;
+    uTime?: UniformValue<number>;
+    tSkyEnvMap?: UniformValue<Texture | null>;
+};
+
+/**
+ * Immutable state for the water enhancer.
+ * This state is always replaced as a whole (never mutated).
+ * Returned directly via states() - refresh after updates.
+ */
+declare type ModelWaterState = Readonly<{
+    useWater: boolean;
+    skyEnvMap: Texture | null;
+    reflectivity: number;
+    waterScaleNormal: number;
+    waterSpeed: number;
+    shininess: number;
+    specularStrength: number;
+    applyWaterNormal: boolean;
+    specular: boolean;
+    ior: number;
+}>;
+
+declare type ModelWaterUniforms = Partial<Omit<ModelWaterRefs, "cachedWaterNormalMap">>;
 
 export declare type MRTPassConfig = LayerDescription_28 & EffectLayerConfig;
 
@@ -3347,6 +4088,18 @@ export declare class MRTPassEffectLayer extends EffectLayerDeclaration<MRTPassCo
 }
 
 export declare type MRTPassUpdate = LayerDescription_28 & EffectLayerUpdate;
+
+/**
+ * Generic Mutates type - refs must be updated by states.
+ * All mutates have:
+ * - `update(state)`: Syncs internal refs from state
+ * - `updateUniforms(uniforms, state)`: Assigns internal refs to shader.uniforms
+ * Additional methods can be added via the Methods type parameter.
+ */
+export declare type Mutates<States, Uniforms extends ShaderUniforms, Methods extends Record<string, (...args: never[]) => void> = Record<never, never>> = {
+    update: (states: States) => void;
+    updateUniforms: (uniforms: Uniforms, states: States) => void;
+} & Methods;
 
 export declare type MvtLayer = WithColorSupport<Layer_2<MvtLayerDescription & {
     type: "mvt";
@@ -3490,7 +4243,7 @@ export declare class Pass<P extends Pass_2, E extends Effect_2 | unknown, O exte
 declare type PassKey = keyof Pick<Scenes, "opaque" | "transparent" | "mrt" | "skyEnvMap">;
 
 export declare class PickableMesh {
-    _setPickable(_pickable: boolean): void;
+    _setPickable(_pickable: boolean, _pickingCoord?: Vector2): void;
 }
 
 export declare type PickedFeature = {
@@ -3532,6 +4285,117 @@ export declare class PointMesh extends Sprite implements FeatureMesh {
     _setFeatureHeight(height: number): void;
 }
 
+/**
+ * Mutation functions for the polygon base enhancer.
+ * Includes `update(state)` to sync refs from state, plus additional methods.
+ */
+declare type PolygonBaseMutates = Mutates<PolygonBaseState, PolygonBaseUniforms, {
+    /**
+     * Update RTE (Relative-To-Eye) uniforms for high-precision rendering.
+     * Call this per-frame to update the model-view matrix and camera position.
+     * Does nothing if RTE is not enabled.
+     *
+     * @param modelViewMatrixRTE - The model-view matrix in RTE coordinates
+     * @param cameraPositionHigh - High-precision component of camera position
+     * @param cameraPositionLow - Low-precision component of camera position
+     * @param state - PolygonBaseState
+     */
+    updateRteUniforms: (modelViewMatrixRTE: Matrix4, cameraPositionHigh: Vector3, cameraPositionLow: Vector3, state: PolygonBaseState) => void;
+    /**
+     * Set the batch data texture ref.
+     * This is needed because batchDataTexture is an external ref passed via props.
+     */
+    setBatchDataTexture: (texture: UniformValue<Texture | null>) => void;
+    /**
+     * Set the globe normal texture ref.
+     * This is needed because globeNormalTexture is an external ref passed via props.
+     */
+    setGlobeNormalTexture: (texture: UniformValue<Texture | null>) => void;
+}>;
+
+/**
+ * Props for the polygon core enhancer.
+ */
+declare type PolygonBaseProps = {
+    color?: number;
+    opacity?: number;
+    transparent?: boolean;
+    wireframe?: boolean;
+    minMaxHeight?: [number, number];
+    addExtrudedHeight?: number;
+    addHeight?: number;
+    clampToGround?: boolean;
+    useGroundNormals?: boolean;
+    isTexturized?: boolean;
+    pickable?: boolean;
+    reflectivity?: number;
+    roughness?: number;
+    emissiveColor?: number;
+    emissiveIntensity?: number;
+    globeNormalTexture?: UniformValue<Texture | null>;
+    batchDataTexture?: UniformValue<Texture | null>;
+    batchColorEnabled?: boolean;
+    useRTE?: boolean;
+} & BatchTextureFlags;
+
+/**
+ * Mutable references (uniforms) for the polygon base enhancer.
+ *
+ * These are shared references with shader.uniforms and can be mutated directly
+ * for efficient GPU uniform updates without shader recompilation.
+ * Internal type - not exposed externally.
+ */
+declare type PolygonBaseRefs = {
+    uMinMaxHeight: UniformValue<[number, number] | undefined>;
+    uAddExtrudedHeight: UniformValue<number>;
+    uAddHeight: UniformValue<number>;
+    uClampToGround: UniformValue<boolean>;
+    useGroundNormals: UniformValue<boolean>;
+    nvr_uPickable: UniformValue<number>;
+    uIsTexturized: UniformValue<boolean>;
+    reflectivity: UniformValue<number>;
+    roughness: UniformValue<number>;
+    batchDataTexture?: UniformValue<Texture | null>;
+    uGlobeNormal?: UniformValue<Texture | null>;
+    modelViewMatrixRTE?: UniformValue<Matrix4>;
+    u_cameraPositionHigh?: UniformValue<Vector3>;
+    u_cameraPositionLow?: UniformValue<Vector3>;
+};
+
+/**
+ * Immutable state for the polygon base enhancer.
+ * This state is always replaced as a whole (never mutated).
+ * Returned directly via states() - refresh after updates.
+ */
+declare type PolygonBaseState = Readonly<{
+    useRTE: boolean;
+    isTexturized: boolean;
+    clampToGround: boolean;
+    useGroundNormals: boolean;
+    pickable: boolean;
+    minMaxHeight: [number, number] | undefined;
+    addExtrudedHeight: number;
+    addHeight: number;
+    reflectivity: number;
+    roughness: number;
+    batchColorEnabled: boolean;
+    useBatchTexture: boolean;
+    useBatchColorShow: boolean;
+    useBatchHeight: boolean;
+    useBatchExtrudedHeight: boolean;
+}>;
+
+declare type PolygonBaseUniforms = Partial<PolygonBaseRefs>;
+
+/**
+ * Combined props for the polygon material enhancer.
+ * Props are explicitly separated into base and water sections for clarity.
+ */
+export declare type PolygonMaterialProps = {
+    base?: PolygonBaseProps;
+    water?: WaterOnlyProps;
+};
+
 export declare class PolygonMesh extends BatchedFeatureMesh<BufferGeometry<Attributes>, MeshLambertMaterial> {
     outline?: PolygonOutlineMesh;
     private _baseBoundingSphere?;
@@ -3539,26 +4403,49 @@ export declare class PolygonMesh extends BatchedFeatureMesh<BufferGeometry<Attri
     private _viewContext;
     /** Layer ID for SelectiveEffect handling */
     private _layerId;
-    private _uniforms?;
-    constructor(buf?: BufferGeometry<Attributes>, mat?: MeshLambertMaterial);
-    init(mesh: PolygonMesh_2, buf: BufferLoader, uniforms: CommonUniforms, tileHandle: TileHandle | undefined, viewEvents: EventHandler<ViewEvents>, viewContext: ViewContext, layerId: string): this;
+    private _uniforms;
+    /** Enhanced material with encapsulated state */
+    private _enhancedMaterial?;
+    /** Previous effectIds for SelectiveEffect registry updates */
+    private _prevEffectIds?;
+    constructor(viewContext: ViewContext, layerId: string, uniforms: CommonUniforms, buf?: BufferGeometry<Attributes>, mat?: MeshLambertMaterial, enhancedMaterial?: ReturnType<typeof createPolygonMaterialEnhancer>);
+    ready(): boolean;
+    init(mesh: PolygonMesh_2, buf: BufferLoader, tileHandle: TileHandle | undefined, viewEvents: EventHandler<ViewEvents>): this;
     clone(): this;
     private initGeometry;
+    /**
+     * Get the enhancer, throwing if not initialized.
+     * @throws Error if enhancer is not initialized
+     */
+    private getEnhancer;
     private enableWater;
     private initMaterial;
     /**
      * Override a material that is used to generate a shadow map.
      */
-    initDepthMaterial(): void;
+    private initDepthMaterial;
     _update(material: PolygonMaterial, active: boolean, isTexturized: boolean): void;
     private _recalculateBoundingSphere;
     _getDefaultBatchAttributeValues(): DefaultBatchAttributeValues;
     _setFeatureColor(color: Color_3): void;
     _setFeatureShow(visible: boolean): void;
+    _setPickable(pickable: boolean): void;
+    _updateBatchAttribute(batchId: number, attribute: BatchedAttributeName, value: number | number[] | boolean): void;
+    _initBatchDataTexture(batchLength: number): void;
     _setFeatureExtrudedHeight(height: number): void;
     _setFeatureHeight(height: number): void;
     get water(): boolean;
     set water(v: boolean);
+    /** Properties for material state used by TileMesh for texturized scene rendering */
+    get waterScaleNormal(): number;
+    get waterSpeed(): number;
+    get shininess(): number;
+    get specularStrength(): number;
+    get applyWaterNormal(): boolean;
+    get specular(): boolean;
+    get reflectivity(): number;
+    get roughness(): number;
+    get clampToGround(): boolean;
     dispose(viewEvents: EventHandler<ViewEvents>): void;
 }
 
@@ -3579,6 +4466,62 @@ export declare class PolygonOutlineMesh extends Line2 implements FeatureMesh {
     dispose(): void;
 }
 
+/**
+ * Combined mutation functions for the polygon water enhancer.
+ */
+declare type PolygonWaterCombinedMutates = {
+    readonly base: PolygonBaseMutates;
+    readonly water: WaterMutates;
+};
+
+/**
+ * Combined state for the polygon water enhancer.
+ * Includes both base state and water-specific state.
+ */
+declare type PolygonWaterCombinedStates = {
+    readonly base: PolygonBaseState;
+    readonly water: PolygonWaterState;
+};
+
+/**
+ * Mutable references (uniforms) for the water enhancer.
+ *
+ * These are shared references with shader.uniforms and can be mutated directly
+ * for efficient GPU uniform updates without shader recompilation.
+ * Internal type - not exposed externally.
+ */
+declare type PolygonWaterRefs = {
+    uWaterNormalMap: UniformValue<Texture | null>;
+    uWaterScaleNormal: UniformValue<number>;
+    uWaterSpeed: UniformValue<number>;
+    uShininess: UniformValue<number>;
+    uSpecularStrength: UniformValue<number>;
+    uApplyWaterNormal: UniformValue<number>;
+    uSpecular: UniformValue<boolean>;
+    uIor: UniformValue<number>;
+    uTime?: UniformValue<number>;
+};
+
+/**
+ * Immutable state for the water enhancer.
+ * This state is always replaced as a whole (never mutated).
+ * Returned directly via states() - refresh after updates.
+ */
+declare type PolygonWaterState = Readonly<{
+    useWater: boolean;
+    skyEnvMap: Texture | null;
+    waterNormalMap: Texture | null;
+    waterScaleNormal: number;
+    waterSpeed: number;
+    shininess: number;
+    specularStrength: number;
+    applyWaterNormal: boolean;
+    specular: boolean;
+    ior: number;
+}>;
+
+declare type PolygonWaterUniforms = Partial<PolygonWaterRefs>;
+
 export declare class PolylineMesh extends BatchedFeatureMesh<BufferGeometry<Attributes_2>, ShaderMaterial> {
     /** ViewContext for SelectiveEffect handling */
     private _viewContext;
@@ -3589,6 +4532,7 @@ export declare class PolylineMesh extends BatchedFeatureMesh<BufferGeometry<Attr
     private initMaterial;
     _update(material: PolylineMaterial, active: boolean): void;
     get color(): any;
+    _setPickable(pickable: boolean, pickingCoord?: Vector2): void;
     _getDefaultBatchAttributeValues(): DefaultBatchAttributeValues;
     _setFeatureColor(color: Color_3): void;
     _setFeatureShow(visible: boolean): void;
@@ -4430,6 +5374,7 @@ export declare type SelectiveEffectOcclusion = "normal" | "silhouette";
 export declare const SelectiveEffectOcclusionMode: {
     readonly Normal: 0;
     readonly Silhouette: 2;
+    readonly Skip: -1;
 };
 
 export declare type SelectiveEffectOcclusionValue = (typeof SelectiveEffectOcclusionMode)[keyof typeof SelectiveEffectOcclusionMode];
@@ -4573,8 +5518,60 @@ export declare function setRTEPosition<T extends Object3D>(mesh: T, positionHigh
  *                          - Point/Billboard/Text/Model: use identity matrix (world space camera position)
  *                          - Polygon: use mesh.matrixWorld (same as modelMatrix)
  * @returns A callback function that works for both onBeforeRender and onBeforeShadow
+ * @deprecated Use setupRTECallback with mutates() instead
  */
 export declare function setupRTEBeforeRender(mesh: Object3D, userData: RTEUserData, modelMatrix?: Matrix4, cameraPosMatrix?: Matrix4): (Object3D["onBeforeRender"] & Object3D["onBeforeShadow"]) | null;
+
+/**
+ * Setup onBeforeRender/onBeforeShadow callback for RTE rendering using mutates()
+ *
+ * @param mesh - The mesh object to setup
+ * @param updateRteUniforms - The mutation function from enhancer.mutates()
+ * @param modelMatrix - Optional model matrix for calcModelMatrixRTE.
+ *                      - Use identity matrix for GLTF models where world position is in RTE uniforms
+ *                      - Use mesh.matrixWorld for objects with actual positions (default)
+ * @param cameraPosMatrix - Optional matrix for calcCameraPosition. If not specified, uses modelMatrix.
+ *                          - Point/Billboard/Text/Model: use identity matrix (world space camera position)
+ *                          - Polygon: use mesh.matrixWorld (same as modelMatrix)
+ * @returns A callback function that works for both onBeforeRender and onBeforeShadow
+ */
+export declare function setupRTECallback(mesh: Object3D, updateRteUniforms: UpdateRteUniformsFn, modelMatrix?: Matrix4, cameraPosMatrix?: Matrix4): Object3D["onBeforeRender"] & Object3D["onBeforeShadow"];
+
+export declare const ShaderLib: {
+    [name: string]: ShaderLibShader;
+    basic: ShaderLibShader;
+    lambert: ShaderLibShader;
+    phong: ShaderLibShader;
+    standard: ShaderLibShader;
+    matcap: ShaderLibShader;
+    points: ShaderLibShader;
+    dashed: ShaderLibShader;
+    depth: ShaderLibShader;
+    normal: ShaderLibShader;
+    sprite: ShaderLibShader;
+    background: ShaderLibShader;
+    cube: ShaderLibShader;
+    equirect: ShaderLibShader;
+    distanceRGBA: ShaderLibShader;
+    shadow: ShaderLibShader;
+    physical: ShaderLibShader;
+};
+
+export declare type ShaderName = keyof ShaderToMaterial;
+
+declare type ShaderToMaterial = {
+    basic: MeshBasicMaterial;
+    lambert: MeshLambertMaterial;
+    phong: MeshPhongMaterial;
+    standard: MeshStandardMaterial;
+    physical: MeshPhysicalMaterial;
+    points: PointsMaterial;
+};
+
+/**
+ * Type alias for shader uniforms.
+ */
+declare type ShaderUniforms = WebGLProgramParametersWithUniforms["uniforms"];
 
 export declare type ShadowMode = "uniform" | "logarithmic" | "practical";
 
@@ -5435,6 +6432,14 @@ export declare type SunLightOptions = {
     debugCSMHelper?: boolean;
 };
 
+declare type SupportedMaterial = SupportedMaterial_2;
+
+declare type SupportedMaterial_2 = MaterialsFromShaders<typeof AVAILABLE_SHADERS>;
+
+declare type SupportedMaterial_3 = SupportedMaterial_4;
+
+declare type SupportedMaterial_4 = MaterialsFromShaders<typeof AVAILABLE_SHADERS_4>;
+
 export declare type TerrainLayer = Layer_2<TerrainLayerDescription & {
     type: "terrain";
 }>;
@@ -5496,8 +6501,6 @@ export declare class TextMesh extends Group implements FeatureMesh, PickableMesh
     private recalculateOutlineParams;
 }
 
-export declare const TEXTURE_LOADER: TextureLoader;
-
 declare type TextureOptions = {
     maxAnisotropy: number;
     minFilter: number;
@@ -5543,7 +6546,7 @@ declare class ThreeView<CustomLayerDescriptions extends Record<string, unknown> 
     /** The Three.js WebGL renderer instance used for rendering the scene. */
     renderer: WebGLRenderer;
     /** The globe instance that manages terrain, imagery layers, and globe-specific settings. */
-    globe: Globe_2;
+    globe: Globe;
     /** The atmosphere renderer that handles sky, sun, and atmospheric scattering effects. */
     atmosphere: Atmosphere;
     /** Layer handle for the sky environment map effect layer. Used for sky reflections. */
@@ -5897,9 +6900,9 @@ export declare class TileMesh extends Mesh<BufferGeometry, TileMaterial, CustomO
     private _onBeforeRender;
     _init(scenes: Scenes, meshes: MeshCache, mesh: MeshAdded, buf: BufferLoader, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle, viewEvents: EventHandler<ViewEvents>, uniforms: CommonUniforms): Promise<void>;
     private createMesh;
-    createSkirtMesh(globe: Globe, mesh: Mesh_2, buf: BufferLoader, terrainGeometry: BufferGeometry, position: Float32Array, uv: Float32Array | null, indices: Uint32Array): BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap>;
+    createSkirtMesh(globe: Globe_2, mesh: Mesh_2, buf: BufferLoader, terrainGeometry: BufferGeometry, position: Float32Array, uv: Float32Array | null, indices: Uint32Array): BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap>;
     private initMaterial;
-    _update(mesh: MeshChanged, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle, globe: Globe): void;
+    _update(mesh: MeshChanged, loadedTexes: Map<string, Texture>, textureOptions: TextureOptions, tileMapByHandle: TileMapByHandle, globe: Globe_2): void;
     private _setupSceneObserver;
     private updateTexturizedSceneTextureVisibility;
     private setUniforms;
@@ -5968,7 +6971,16 @@ export declare type TubeMeshLayerConfig = MeshLayerConfigWithSelectiveEffect & L
 
 export declare type TubeMeshLayerUpdate = MeshLayerUpdateWithSelectiveEffect & LayerDescription_11;
 
+declare type UniformValue<T> = {
+    value: T;
+};
+
 export declare function updateBatchAttribute(material: Material, batchId: number, attribute: BatchedAttributeName, value: number | number[] | boolean, defaultValues: DefaultBatchAttributeValues): void;
+
+/**
+ * Type for the updateRteUniforms mutation function
+ */
+export declare type UpdateRteUniformsFn = (modelViewMatrixRTE: Matrix4, cameraPositionHigh: Vector3, cameraPositionLow: Vector3) => void;
 
 export declare type Vec2 = Required<NormalizeWASMClass_2<Vec2_2>>;
 
@@ -5987,14 +6999,15 @@ export declare class ViewContext {
     atmosphere: Atmosphere;
     layersManager: LayersManager;
     renderPassOrchestrator: RenderPassOrchestrator;
+    concurrencyManager: ConcurrencyManager;
     _privates: Private;
     private eventHandler?;
     selectiveEffectRegistry?: SelectiveEffectHelper;
     debugOptions: ViewDebugOptions;
-    globe?: Globe_2;
+    globe?: Globe;
     private readonly selectiveEffects;
-    constructor(scenes: Scenes, camera: PerspectiveCamera, atmosphere: Atmosphere, layersManager: LayersManager, renderPassOrchestrator: RenderPassOrchestrator, _privates: Private, eventHandler?: EventHandler<ViewEvents>, selectiveEffectHelper?: SelectiveEffectHelper, debugOptions?: ViewDebugOptions);
-    setGlobe(globe: Globe_2): void;
+    constructor(scenes: Scenes, camera: PerspectiveCamera, atmosphere: Atmosphere, layersManager: LayersManager, renderPassOrchestrator: RenderPassOrchestrator, concurrencyManager: ConcurrencyManager, _privates: Private, eventHandler?: EventHandler<ViewEvents>, selectiveEffectHelper?: SelectiveEffectHelper, debugOptions?: ViewDebugOptions);
+    setGlobe(globe: Globe): void;
     setCamera(camera: PerspectiveCamera): void;
     emit(event: "_csmMounted" | "_csmUnmounted", material: Material): void;
     registerLayerEffects(layerId: string, effectIds: string[], selectiveEffectOcclusion?: SelectiveEffectOcclusionValue, emissiveIntensity?: number): void;
@@ -6069,6 +7082,34 @@ export declare const WATER_ASSETS_URL: string;
 
 export declare const WATER_NORMAL_URL: string;
 
+/**
+ * Mutation functions for the water enhancer (internal only).
+ */
+declare type WaterMutates = Mutates<PolygonWaterState, PolygonWaterUniforms, {
+    /**
+     * Set the time uniform ref.
+     * Assigns the external ref object (identity doesn't change after mount).
+     */
+    setTimeUniform: (timeUniform: UniformValue<number>) => void;
+}>;
+
+/**
+ * Water-only props (excluding base props).
+ */
+declare type WaterOnlyProps = {
+    water?: boolean;
+    waterScaleNormal?: number;
+    waterSpeed?: number;
+    shininess?: number;
+    specularStrength?: number;
+    applyWaterNormal?: boolean;
+    specular?: boolean;
+    ior?: number;
+    skyEnvMap?: Texture | null;
+    waterNormalMap?: Texture | null;
+    timeUniform?: UniformValue<number>;
+};
+
 declare type Window_2 = Required<NormalizeWASMClass_2<Window_3>>;
 export { Window_2 as Window }
 
@@ -6090,6 +7131,7 @@ export declare type XYZ = {
 };
 
 
+export * from "@takram/three-clouds";
 export * from "@takram/three-geospatial/shaders";
 
 export { }

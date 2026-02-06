@@ -1,6 +1,6 @@
-import p from "@navara/three";
-import { createContext as m, useContext as k, useState as R, useRef as a, useEffect as v } from "react";
-var l = { exports: {} }, c = {};
+import E from "@navara/three";
+import { createContext as m, useContext as k, useState as x, useRef as c, useEffect as R } from "react";
+var v = { exports: {} }, a = {};
 /**
  * @license React
  * react-jsx-runtime.production.js
@@ -10,35 +10,35 @@ var l = { exports: {} }, c = {};
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var x;
+var f;
 function T() {
-  if (x) return c;
-  x = 1;
+  if (f) return a;
+  f = 1;
   var e = Symbol.for("react.transitional.element"), s = Symbol.for("react.fragment");
-  function i(n, r, t) {
-    var o = null;
-    if (t !== void 0 && (o = "" + t), r.key !== void 0 && (o = "" + r.key), "key" in r) {
-      t = {};
-      for (var u in r)
-        u !== "key" && (t[u] = r[u]);
-    } else t = r;
-    return r = t.ref, {
+  function i(u, r, n) {
+    var t = null;
+    if (n !== void 0 && (t = "" + n), r.key !== void 0 && (t = "" + r.key), "key" in r) {
+      n = {};
+      for (var o in r)
+        o !== "key" && (n[o] = r[o]);
+    } else n = r;
+    return r = n.ref, {
       $$typeof: e,
-      type: n,
-      key: o,
+      type: u,
+      key: t,
       ref: r !== void 0 ? r : null,
-      props: t
+      props: n
     };
   }
-  return c.Fragment = s, c.jsx = i, c.jsxs = i, c;
+  return a.Fragment = s, a.jsx = i, a.jsxs = i, a;
 }
-var f;
-function C() {
-  return f || (f = 1, l.exports = T()), l.exports;
+var w;
+function _() {
+  return w || (w = 1, v.exports = T()), v.exports;
 }
-var V = C();
-const w = m(void 0), _ = () => {
-  const e = k(w);
+var C = _();
+const h = m(void 0), V = () => {
+  const e = k(h);
   if (!e)
     throw new Error(
       "Navara React Error: You have to invoke this hook inside of ViewProvider."
@@ -49,41 +49,48 @@ const w = m(void 0), _ = () => {
   children: s,
   ...i
 }) => {
-  const [n, r] = R(), [t, o] = R(!1), u = a(void 0);
-  return u.current = n, v(() => {
-    if (u.current) {
+  const [u, r] = x(), [n, t] = x(!1), o = c(void 0);
+  return o.current = u, R(() => {
+    if (o.current) {
       console.warn("You need to recreate ThreeView.");
       return;
     }
-    const h = e && "current" in e ? e.current : e, d = new p({ canvas: h, ...i });
-    return r(d), u.current = d, (async () => {
+    const d = e && "current" in e ? e.current : e, l = new E({ canvas: d, ...i });
+    return r(l), o.current = l, (async () => {
       try {
-        await d.init(), o(!0);
-      } catch (E) {
-        console.error("Navara init failed:", E);
+        await l.init(), t(!0);
+      } catch (p) {
+        console.error("Navara init failed:", p);
       }
     })(), () => {
     };
-  }, [e, i]), /* @__PURE__ */ V.jsx(w.Provider, { value: { view: n }, children: t ? s : null });
+  }, [e, i]), /* @__PURE__ */ C.jsx(h.Provider, { value: { view: u }, children: n ? s : null });
 };
 function J({
   config: e,
   onReady: s
 }) {
-  const { view: i } = _(), n = a(null), r = a(e), t = a(s);
-  return r.current = e, v(() => {
-    const o = i.addLayer(r.current);
-    n.current = o;
-    const u = t.current?.(o);
+  const { view: i } = V(), u = c(null), r = c(e), n = c(s);
+  return r.current = e, R(() => {
+    const t = i.addLayer(r.current);
+    u.current = t;
+    const o = n.current?.(t);
     return () => {
-      u?.(), o.delete(), n.current = null;
+      o?.(), t.delete(), u.current = null;
     };
-  }, [i]), v(() => {
-    n.current && n.current.update(e);
+  }, [i]), R(() => {
+    if (u.current) {
+      const t = u.current;
+      if ("data" in e) {
+        const { data: o, ...d } = e;
+        t.update(d);
+      } else
+        t.update(e);
+    }
   }, [e]), null;
 }
 export {
   J as Layer,
   y as ViewProvider,
-  _ as useViewContext
+  V as useViewContext
 };
