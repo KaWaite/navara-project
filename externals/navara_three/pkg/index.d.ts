@@ -528,6 +528,11 @@ declare type AVAILABLE_SHADERS_5 = typeof AVAILABLE_SHADERS_6;
 
 declare const AVAILABLE_SHADERS_6: "lambert"[];
 
+/**
+ * Shader types that this enhancer can transform.
+ */
+declare const AVAILABLE_SHADERS_7: ("basic" | "lambert" | "phong" | "standard" | "physical")[];
+
 declare type AvailableMaterialProperty = ExtractProperties<PointMaterial & PolylineMaterial & PolygonMaterial & ModelMaterial_2 & TextMaterial>;
 
 export declare class AxesHelperLayer extends MeshLayerDeclaration<AxesHelperLayerConfig, AxesHelperLayerUpdate, AxesHelper> {
@@ -1147,7 +1152,7 @@ declare type ConvertColorFields<T> = {
 
 /**
  * Converts screen coordinates to world coordinates by raycasting against the WGS84 ellipsoid.
- * @param window - Window configuration with width, height, and pixelRatio
+ * @param window - Window configuration with width, height, and pixel_ratio
  * @param camera - Three.js PerspectiveCamera
  * @param vec2 - Screen coordinates in CSS pixels (same as MouseEvent clientX/clientY)
  * @returns World position Vector3 in ECEF coordinates, or undefined if no intersection with ellipsoid
@@ -1156,7 +1161,7 @@ export declare function convertScreenToWorld(windowObject: Window_2, camera: Per
 
 /**
  * Converts world coordinates to screen coordinates.
- * @param window - Window configuration with width, height, and pixelRatio
+ * @param window - Window configuration with width, height, and pixel_ratio
  * @param camera - Three.js PerspectiveCamera
  * @param worldPos - World position Vector3 in ECEF coordinates
  * @returns Screen coordinates in CSS pixels, or undefined if behind camera
@@ -1251,6 +1256,16 @@ declare function createModelMaterialEnhancer(material: SupportedMaterial): Mater
  * ```
  */
 export declare function createPolygonMaterialEnhancer(material: SupportedMaterial_3): MaterialEnhancer<SupportedMaterial_3, PolygonMaterialProps, PolygonWaterCombinedStates, PolygonWaterCombinedMutates, AVAILABLE_SHADERS_5>;
+
+/**
+ * Factory function to create a shadow map depth enhancer.
+ *
+ * This enhancer handles shadow map depth shader injection.
+ * It's designed to be used with customDepthMaterial for shadow map generation.
+ *
+ * @param material - The Three.js material to enhance
+ */
+export declare function createShadowMapDepthEnhancer(material: SupportedMaterial_5): MaterialEnhancer<SupportedMaterial_5, ShadowMapDepthProps, ShadowMapDepthState, ShadowMapDepthMutates, typeof AVAILABLE_SHADERS_7>;
 
 export { CSMHelper }
 
@@ -2205,14 +2220,14 @@ export declare const generateMixOverlaidTexturesMacro: (numTextures: number, ins
 
 /**
  * Computes the surface normal vector at a geodetic position on the WGS84 ellipsoid.
- * @param lle - Geodetic coordinates (lng in radians, lat in radians, height in meters)
+ * @param lle - Geodetic coordinates (lng, lat, height)
  * @returns Unit normal vector pointing outward from the ellipsoid surface
  */
 export declare function geodeticSurfaceNormal(lle: LatLngHeight_2): Vector3;
 
 /**
  * Converts geodetic coordinates (longitude, latitude, height) to a Cartesian Vector3 in ECEF coordinates.
- * @param lle - Geodetic coordinates (lng in radians, lat in radians, height in meters)
+ * @param lle - Geodetic coordinates (lng, lat, height in meters)
  * @returns Cartesian Vector3 in Earth-Centered Earth-Fixed (ECEF) coordinates
  */
 export declare function geodeticToVector3(lle: LatLngHeight_2): Vector3;
@@ -2249,7 +2264,7 @@ export declare function getMaskPassContext(): Readonly<MaskPassContext>;
 
 /**
  * Creates a picking ray from screen coordinates for raycasting.
- * @param window - Window configuration with width, height, and pixelRatio
+ * @param window - Window configuration with width, height, and pixel_ratio
  * @param camera - Three.js PerspectiveCamera
  * @param vec2 - Screen coordinates in CSS pixels (same as MouseEvent clientX/clientY)
  * @returns A Ray starting from the camera through the screen point
@@ -2403,6 +2418,11 @@ export declare class GLTFModelLayer extends MeshLayerDeclaration<GLTFModelLayerC
     createMesh(): Group;
     private loadModel;
     private setupModel;
+    /**
+     * Override a material that is used to generate a shadow map.
+     * Uses the shadowMapDepthEnhancer to inject shadow map depth shaders.
+     */
+    private initDepthMaterial;
     private setPositionRTE;
     private setupRTEShadersForMesh;
     private modifyMaterialForRTE;
@@ -2514,7 +2534,7 @@ export declare class GLTFModelLayer extends MeshLayerDeclaration<GLTFModelLayerC
      * Get currently playing animation name
      */
     private getCurrentAnimationName;
-    getWorldPosition(): Vector3 | undefined;
+    getWorldPosition(): Vector3;
     private lastUpdateTime?;
 }
 
@@ -2842,7 +2862,6 @@ declare type LayerDescription_13 = {
         url: string;
         castShadow?: boolean;
         receiveShadow?: boolean;
-        useRTE?: boolean;
         animationEnabled?: boolean;
         animationClips?: string[];
         animationActiveClip?: string;
@@ -5573,6 +5592,27 @@ declare type ShaderToMaterial = {
  */
 declare type ShaderUniforms = WebGLProgramParametersWithUniforms["uniforms"];
 
+/**
+ * Mutation functions for the shadow map depth enhancer.
+ */
+declare type ShadowMapDepthMutates = Mutates<ShadowMapDepthState, ShadowMapDepthUniforms>;
+
+export declare type ShadowMapDepthProps = {};
+
+/**
+ * Mutable references (uniforms) for the shadow map depth enhancer.
+ * These are external refs passed via props.
+ */
+declare type ShadowMapDepthRefs = {};
+
+/**
+ * Immutable state for the shadow map depth enhancer.
+ * This enhancer has no internal state that changes - it just holds external refs.
+ */
+declare type ShadowMapDepthState = Readonly<{}>;
+
+declare type ShadowMapDepthUniforms = Partial<ShadowMapDepthRefs>;
+
 export declare type ShadowMode = "uniform" | "logarithmic" | "practical";
 
 export declare class SkyBoxMeshLayer extends MeshLayerDeclaration<SkyBoxMeshLayerConfig, SkyBoxMeshLayerUpdate, Mesh<BufferGeometry, ShaderMaterial>> {
@@ -6455,6 +6495,12 @@ declare type SupportedMaterial_3 = SupportedMaterial_4;
 
 declare type SupportedMaterial_4 = MaterialsFromShaders<typeof AVAILABLE_SHADERS_4>;
 
+/**
+ * Material types that can be enhanced by this enhancer.
+ * Supports all standard mesh materials for depth/shadow rendering.
+ */
+declare type SupportedMaterial_5 = MeshBasicMaterial | MeshLambertMaterial | MeshPhongMaterial | MeshStandardMaterial | MeshPhysicalMaterial;
+
 export declare type TerrainLayer = Layer_2<TerrainLayerDescription & {
     type: "terrain";
 }>;
@@ -7004,7 +7050,7 @@ export declare type Vec3 = Required<NormalizeWASMClass_2<Vec3_2>>;
 /**
  * Converts a Cartesian Vector3 in ECEF coordinates to geodetic coordinates.
  * @param xyz - Cartesian Vector3 in Earth-Centered Earth-Fixed (ECEF) coordinates
- * @returns Geodetic coordinates (lng in radians, lat in radians, height in meters)
+ * @returns Geodetic coordinates (lng, lat, height in meters)
  */
 export declare function vector3ToGeodetic(xyz: Vector3): LatLngHeight_2;
 
