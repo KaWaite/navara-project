@@ -1,9 +1,0 @@
-{
-  "name": "@navara/three_react",
-  "type": "module",
-  "version": "0.0.0",
-  "private": true,
-  "main": "pkg/index.umd.cjs",
-  "module": "pkg/index.js",
-  "types": "pkg/index.d.ts"
-}
