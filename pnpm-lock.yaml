@@ -20,24 +20,12 @@ importers:
 
   .:
     dependencies:
-      '@navara/core':
-        specifier: ./externals/navara-core-0.0.0.tgz
-        version: file:externals/navara-core-0.0.0.tgz
-      '@navara/engine':
-        specifier: ./externals/navara-engine-0.1.0.tgz
-        version: file:externals/navara-engine-0.1.0.tgz
-      '@navara/engine-api':
-        specifier: ./externals/navara-engine-api-0.1.0.tgz
-        version: file:externals/navara-engine-api-0.1.0.tgz
       '@navara/three':
         specifier: ./externals/navara-three-0.0.0.tgz
         version: file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.183.2))(postprocessing@6.38.3(three@0.183.2))(react@19.2.0)(three@0.183.2)
       '@navara/three_default_plugin':
         specifier: ./externals/navara-three_default_plugin-0.0.0.tgz
         version: file:externals/navara-three_default_plugin-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.183.2))(postprocessing@6.38.3(three@0.183.2))(react@19.2.0)(three@0.183.2))(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.183.2))(postprocessing@6.38.3(three@0.183.2))(react@19.2.0)(three@0.183.2)
-      '@navara/three_react':
-        specifier: ./externals/navara-three_react-0.0.0.tgz
-        version: file:externals/navara-three_react-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.183.2))(postprocessing@6.38.3(three@0.183.2))(react@19.2.0)(three@0.183.2))(react@19.2.0)(three@0.183.2)
       postprocessing:
         specifier: 6.38.3
         version: 6.38.3(three@0.183.2)
@@ -119,18 +107,18 @@ packages:
     version: 0.1.0
 
   '@navara/font@file:externals/navara-font-0.0.0.tgz':
-    resolution: {integrity: sha512-DePt07M5pTTzJkoIXerci66WmRFF95uQg90XUlXNzo+lUfwf64oELvwT26wgtoGl+ps4FqX3Llc8mZCYxt4S7Q==, tarball: file:externals/navara-font-0.0.0.tgz}
+    resolution: {integrity: sha512-aDwp2L1I6Iie9VmlPXf8C0+VX/IKzD3hfRisjJX0KzCrKi1C5Bl+YEM8l/BQC1oNW2T7mVCy6Afdz5zG9mYkOQ==, tarball: file:externals/navara-font-0.0.0.tgz}
     version: 0.0.0
 
   '@navara/three@file:externals/navara-three-0.0.0.tgz':
-    resolution: {integrity: sha512-4jPjsXrs5e9g98z6/xDcbDa2NtnJ8UcdRilm3wU5FGbDpQfgnCNzDOiNFrcdauMmTOrk1eGIfvrrFh5UlIEmTA==, tarball: file:externals/navara-three-0.0.0.tgz}
+    resolution: {integrity: sha512-lLPEcPyLA0WVF7UOt4wtxaFAUZhJlx8ayP+B4EeuhrsFgaRPcCGwLQtwzYEu77Cnx1HFuXDggxtEbuXU1x4qXw==, tarball: file:externals/navara-three-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       postprocessing: '>=6.38.0'
       three: '>=0.183.0'
 
   '@navara/three_api@file:externals/navara-three_api-0.0.0.tgz':
-    resolution: {integrity: sha512-XGtDVBbGHN3SpIbNU/txFB2NFWlkoiJDVGVBfyOCVRrjsGGcGfYk31M3e80XS+i2YUMildNxEwmdH38avEwZ8g==, tarball: file:externals/navara-three_api-0.0.0.tgz}
+    resolution: {integrity: sha512-A1LBgOeopt70luFP+JripFEkqQNEXaQGpGKImTVmBOSHoa/pHrJ/bOCReYdjfBUu+rDEZl4saLupFHPc5yOmlQ==, tarball: file:externals/navara-three_api-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       three: '>=0.183.0'
@@ -142,7 +130,7 @@ packages:
       three: '>=0.183.0'
 
   '@navara/three_default_layers@file:externals/navara-three_default_layers-0.0.0.tgz':
-    resolution: {integrity: sha512-Sp4IbVSugeqia72L1nu7NsfZG8900HPFMfaJwlxNXNg4mHfc2QkCEEwzjL82yw1xc9dbEezgmlCvYccvxqrqlg==, tarball: file:externals/navara-three_default_layers-0.0.0.tgz}
+    resolution: {integrity: sha512-vxfAEQPXxhTxtl3B1QJJTJe96xjaaygwJdHNmMlH4wXr1NoEeJnoxJqBSpjxPdQr6ApQX4BWnYWxTL2quDcdtA==, tarball: file:externals/navara-three_default_layers-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
@@ -154,14 +142,6 @@ packages:
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
-
-  '@navara/three_react@file:externals/navara-three_react-0.0.0.tgz':
-    resolution: {integrity: sha512-zPAWDSn7/NzXvfbQdoG57M26UUOyqxW6xiS2i35aQ652t3hWZdAbiaNsBi4OKQ6vSxINmpo8lRs6f1OxH69Kdw==, tarball: file:externals/navara-three_react-0.0.0.tgz}
-    version: 0.0.0
-    peerDependencies:
-      '@navara/three': 0.0.0
-      react: '>=19'
-      three: '>=0.183.0'
 
   '@navara/worker@file:externals/navara-worker-0.0.0.tgz':
     resolution: {integrity: sha512-MjcQfNLQE734UfyJoycHVZgSfPHRhypdYgpHevxxL++x3a4cj/BkLwU61MXpnvkAHG++HVdZ9W+N5tA6xTVgYg==, tarball: file:externals/navara-worker-0.0.0.tgz}
@@ -1033,12 +1013,6 @@ snapshots:
       - postprocessing
       - react
       - three
-
-  '@navara/three_react@file:externals/navara-three_react-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.183.2))(postprocessing@6.38.3(three@0.183.2))(react@19.2.0)(three@0.183.2))(react@19.2.0)(three@0.183.2)':
-    dependencies:
-      '@navara/three': file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.183.2))(postprocessing@6.38.3(three@0.183.2))(react@19.2.0)(three@0.183.2)
-      react: 19.2.0
-      three: 0.183.2
 
   '@navara/worker@file:externals/navara-worker-0.0.0.tgz':
     dependencies:

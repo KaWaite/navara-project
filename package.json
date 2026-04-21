@@ -9,11 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@navara/engine": "./externals/navara-engine-0.1.0.tgz",
-    "@navara/engine-api": "./externals/navara-engine-api-0.1.0.tgz",
-    "@navara/core": "./externals/navara-core-0.0.0.tgz",
     "@navara/three": "./externals/navara-three-0.0.0.tgz",
-    "@navara/three_react": "./externals/navara-three_react-0.0.0.tgz",
     "@navara/three_default_plugin": "./externals/navara-three_default_plugin-0.0.0.tgz",
     "three": "0.183.2",
     "three-stdlib": "2.36.1",
