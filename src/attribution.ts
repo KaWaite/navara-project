@@ -1,6 +1,7 @@
 type Attribution = {
   url: string;
-  label: string;
+  label?: string;
+  html?: string;
 }
 
 export const drawAttributions = (attributions: Attribution[]) => {
@@ -22,21 +23,24 @@ export const drawAttributions = (attributions: Attribution[]) => {
   });
 
   attributions.forEach((attr, i) => {
-    const a = document.createElement("a");
-    a.href = attr.url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.textContent = attr.label;
-    Object.assign(a.style, {
+    const elm = attr.label ? document.createElement("a") : document.createElement("span");
+
+    if (elm instanceof HTMLAnchorElement) {
+      elm.href = attr.url;
+      elm.target = "_blank";
+      elm.rel = "noopener noreferrer";
+      elm.textContent = attr.label ?? "";
+    } else {
+      elm.innerHTML = attr.html ?? "";
+      elm.querySelectorAll("a").forEach(a => a.style.color = "#fff");
+    }
+    Object.assign(elm.style, {
       color: "#fff",
-      textDecoration: "none",
       padding: "4px 8px",
       borderLeft: i === 0 ? "none" : "1px solid rgba(255, 255, 255, 0.4)",
       whiteSpace: "nowrap",
     });
-    a.addEventListener("mouseenter", () => { a.style.textDecoration = "underline"; });
-    a.addEventListener("mouseleave", () => { a.style.textDecoration = "none"; });
-    container.appendChild(a);
+    container.appendChild(elm);
   });
 
   document.body.appendChild(container);
