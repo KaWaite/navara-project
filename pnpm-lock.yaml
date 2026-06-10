@@ -109,7 +109,7 @@ packages:
     version: 0.1.0
 
   '@navara/engine@file:externals/navara-engine-0.1.0.tgz':
-    resolution: {integrity: sha512-LCmDsAfXyxZeM8zYu+LWyy9QYC5Ym/yaU3/rqEcMtX+dVobZFD8EXs4QdR93huDEvifUUp6Yu+g593Fn0cUUJw==, tarball: file:externals/navara-engine-0.1.0.tgz}
+    resolution: {integrity: sha512-g5LvruuHvMwn6vFxiBDtOG7s538jqdXYFPhJm0GlL0Ex4MYaNlNKuN6oavWhoS2RfU6f6WL63YNThyPp5Ae8tQ==, tarball: file:externals/navara-engine-0.1.0.tgz}
     version: 0.1.0
 
   '@navara/font@file:externals/navara-font-0.0.0.tgz':
@@ -117,7 +117,7 @@ packages:
     version: 0.0.0
 
   '@navara/three@file:externals/navara-three-0.0.0.tgz':
-    resolution: {integrity: sha512-SZkaqOlMIm5FQqD6K5NOAgvM0A7eGoc1xRwiGWiNiDM7jRV4kzTqwBzVFNJ6wvhxQW4L8eV649y43tj7R0EUvw==, tarball: file:externals/navara-three-0.0.0.tgz}
+    resolution: {integrity: sha512-garqgtBhgwEA9fPaCbuutmiwTV/OLRUYjs4/dogHFDvWJm3sX8fHRTJeTUyDxKNxFYnXCtTqnsqfCq99tXPGHw==, tarball: file:externals/navara-three-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       postprocessing: '>=6.38.0'
@@ -136,7 +136,7 @@ packages:
       three: '>=0.183.0'
 
   '@navara/three_default_descs@file:externals/navara-three_default_descs-0.0.0.tgz':
-    resolution: {integrity: sha512-wCGzvEbCV+yDPWN2v4CR788c4FzcQQteY7Ek+2sLo7QJfUot//UbgrLede1EvzbxYoCrAO+DUMDv9DetmlsvtA==, tarball: file:externals/navara-three_default_descs-0.0.0.tgz}
+    resolution: {integrity: sha512-4kUFI+G5H6JS64ACPVfQkQ65oWp3pSgEVNmEbooh1y2gr6kNUGv5S79EPs7P5aLurxSuskGI3m09ACtDinURrQ==, tarball: file:externals/navara-three_default_descs-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
@@ -150,7 +150,7 @@ packages:
       '@navara/three': 0.0.0
 
   '@navara/three_plugins@file:externals/navara-three_plugins-0.0.0.tgz':
-    resolution: {integrity: sha512-YbpxyZlAQNqyNIiHqtdZ4MWOIimNcSNhFrsOxZPBUvEBd5JaHdDwnXRLH3Nq5b1oGx+8GyTIUfdMfE9qUxif3Q==, tarball: file:externals/navara-three_plugins-0.0.0.tgz}
+    resolution: {integrity: sha512-wX8oJmxdgiWKW2nj/WV60yX4LP+RPsJlkhYPM3K0bFDUHiMKW3rdSAuBzOIh72TeCejgPU73yiDM/nx4C0HGVg==, tarball: file:externals/navara-three_plugins-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
