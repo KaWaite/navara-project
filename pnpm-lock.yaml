@@ -5,32 +5,32 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@navara/engine': ./externals/navara-engine-0.1.0.tgz
-  '@navara/engine-api': ./externals/navara-engine-api-0.1.0.tgz
-  '@navara/engine-worker': ./externals/navara-engine-worker-0.1.0.tgz
-  '@navara/engine-font-worker': ./externals/navara-engine-font-worker-0.1.0.tgz
-  '@navara/core': ./externals/navara-core-0.0.0.tgz
-  '@navara/font': ./externals/navara-font-0.0.0.tgz
-  '@navara/three_csm': ./externals/navara-three_csm-0.0.0.tgz
-  '@navara/three_api': ./externals/navara-three_api-0.0.0.tgz
-  '@navara/three_default_descs': ./externals/navara-three_default_descs-0.0.0.tgz
-  '@navara/worker': ./externals/navara-worker-0.0.0.tgz
+  '@navara/engine': file:./externals/navara-engine-0.1.0.tgz
+  '@navara/engine-api': file:./externals/navara-engine-api-0.1.0.tgz
+  '@navara/engine-worker': file:./externals/navara-engine-worker-0.1.0.tgz
+  '@navara/engine-font-worker': file:./externals/navara-engine-font-worker-0.1.0.tgz
+  '@navara/core': file:./externals/navara-core-0.0.0.tgz
+  '@navara/font': file:./externals/navara-font-0.0.0.tgz
+  '@navara/three_csm': file:./externals/navara-three_csm-0.0.0.tgz
+  '@navara/three_api': file:./externals/navara-three_api-0.0.0.tgz
+  '@navara/three_default_descs': file:./externals/navara-three_default_descs-0.0.0.tgz
+  '@navara/worker': file:./externals/navara-worker-0.0.0.tgz
 
 importers:
 
   .:
     dependencies:
       '@navara/three':
-        specifier: ./externals/navara-three-0.0.0.tgz
+        specifier: file:./externals/navara-three-0.0.0.tgz
         version: file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0)
       '@navara/three_default_descs':
-        specifier: ./externals/navara-three_default_descs-0.0.0.tgz
+        specifier: file:externals/navara-three_default_descs-0.0.0.tgz
         version: file:externals/navara-three_default_descs-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0))(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0)
       '@navara/three_default_plugin':
-        specifier: ./externals/navara-three_default_plugin-0.0.0.tgz
+        specifier: file:./externals/navara-three_default_plugin-0.0.0.tgz
         version: file:externals/navara-three_default_plugin-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0))(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0)
       '@navara/three_plugins':
-        specifier: ./externals/navara-three_plugins-0.0.0.tgz
+        specifier: file:./externals/navara-three_plugins-0.0.0.tgz
         version: file:externals/navara-three_plugins-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0))(@navara/three_default_plugin@file:externals/navara-three_default_plugin-0.0.0.tgz(@navara/three@file:externals/navara-three-0.0.0.tgz(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0))(@react-three/fiber@9.6.0(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.184.0))(postprocessing@6.38.3(three@0.184.0))(react@19.2.0)(three@0.184.0))(three@0.184.0)
       postprocessing:
         specifier: 6.38.3
@@ -93,50 +93,50 @@ packages:
       '@emnapi/runtime': ^1.7.1
 
   '@navara/core@file:externals/navara-core-0.0.0.tgz':
-    resolution: {integrity: sha512-znnIQyxY5EJv4AYPhR7a2eHTp0tJ/Rrxp8whv6oNvHYDpozS0RdQxyBn4+jyuhr3Co0JmIfhyMCBUP8T7wZLFw==, tarball: file:externals/navara-core-0.0.0.tgz}
+    resolution: {integrity: sha512-f+4fsWkVKi8lhwtne362uAFanK1ywLK5vWYtzlYBS9zX8QQr7UGZkj+jhqF311X8Lf5ENSwDmEPV9cDWfmmPow==, tarball: file:externals/navara-core-0.0.0.tgz}
     version: 0.0.0
 
   '@navara/engine-api@file:externals/navara-engine-api-0.1.0.tgz':
-    resolution: {integrity: sha512-Vvl9Djy1snUAxzaacyXX6TMf3pY3YNsd81cI54phitN3fN4SJax5g5NdHEpQGpFNsIoKIguOkaurX6qare0frQ==, tarball: file:externals/navara-engine-api-0.1.0.tgz}
+    resolution: {integrity: sha512-1gTHzMKV7noe0RGWFEhaQwTCaHs9xrKbtyVFCCbRtJDBwzMUi8wTI4LCfsbbX8U7dVLufk+0oXo+xcykyJi9Xg==, tarball: file:externals/navara-engine-api-0.1.0.tgz}
     version: 0.1.0
 
   '@navara/engine-font-worker@file:externals/navara-engine-font-worker-0.1.0.tgz':
-    resolution: {integrity: sha512-yzf9fnJq7fF7Hg9re4TwLaVWZsvmqSzxc1C4M4q8/qi0SShBZ72kwujoxcw7brmYMT2cjMevHNqkzGoqsxCQhQ==, tarball: file:externals/navara-engine-font-worker-0.1.0.tgz}
+    resolution: {integrity: sha512-VHmaU3wUMpJ3igBLAmuFHXLTBR0b6gF7wf7Bue/uiWDHbyx8geKhv9cghwgg/RasUaLnO1LEXRifXbmTYevhag==, tarball: file:externals/navara-engine-font-worker-0.1.0.tgz}
     version: 0.1.0
 
   '@navara/engine-worker@file:externals/navara-engine-worker-0.1.0.tgz':
-    resolution: {integrity: sha512-Z203puNdKfw9Wp2Y7cYaHoVM61bfGx9fo6Dye9Tjj0KnZQ+/aExuGgDcN9gKJMVFjJhnuY7sz3LHEP7QcQFtog==, tarball: file:externals/navara-engine-worker-0.1.0.tgz}
+    resolution: {integrity: sha512-CD5SrTmM3XgiNeQvko+GHJ/UBMyo6rYElDOX7qZ8bxm+hsMKPHfvKNiZaht8jhp/hGsHaDVT1jC8Z/o5xEQOjQ==, tarball: file:externals/navara-engine-worker-0.1.0.tgz}
     version: 0.1.0
 
   '@navara/engine@file:externals/navara-engine-0.1.0.tgz':
-    resolution: {integrity: sha512-g5LvruuHvMwn6vFxiBDtOG7s538jqdXYFPhJm0GlL0Ex4MYaNlNKuN6oavWhoS2RfU6f6WL63YNThyPp5Ae8tQ==, tarball: file:externals/navara-engine-0.1.0.tgz}
+    resolution: {integrity: sha512-nh21ZVgIQH37uBOj0gvjFancT+DbTbrdv44oCXNd8QZO3dmx+F2w9bB+85wa+2ZW8la8mkJR2Fg8NC1EnDykkQ==, tarball: file:externals/navara-engine-0.1.0.tgz}
     version: 0.1.0
 
   '@navara/font@file:externals/navara-font-0.0.0.tgz':
-    resolution: {integrity: sha512-Twx9/PObthv77IATG7KL85wRyiERiJ+iVsnV9hpvCks8LukgwFbeWjgTbOWIEHT52xCwwQMNrw5yQTHtl8uIuw==, tarball: file:externals/navara-font-0.0.0.tgz}
+    resolution: {integrity: sha512-ppa9o9ebC1y8ccCkblBVf4zL+2dCxFZilfXcVPHIvvrh5B7m7x3eQIAdY5bEZVp2yId5J2EiGzDxWWyeTGqiIQ==, tarball: file:externals/navara-font-0.0.0.tgz}
     version: 0.0.0
 
   '@navara/three@file:externals/navara-three-0.0.0.tgz':
-    resolution: {integrity: sha512-garqgtBhgwEA9fPaCbuutmiwTV/OLRUYjs4/dogHFDvWJm3sX8fHRTJeTUyDxKNxFYnXCtTqnsqfCq99tXPGHw==, tarball: file:externals/navara-three-0.0.0.tgz}
+    resolution: {integrity: sha512-nF8IFe0DT8fBjYVjFhPZowe6xvdqvIBLXME4iKJnRnSbLt6CDZE1BTRuST0Usf7JE8Fn3TpXptI/Ha6hdGYGgg==, tarball: file:externals/navara-three-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       postprocessing: '>=6.38.0'
       three: '>=0.183.0'
 
   '@navara/three_api@file:externals/navara-three_api-0.0.0.tgz':
-    resolution: {integrity: sha512-Om5bX5ZI6W+DHQy03RS1GF9i33mnKLvcnAU8zftIkMf9Viv1SFCYug943Eq6uhjuS9l9eQ5zbvjJyaAPwHWJlA==, tarball: file:externals/navara-three_api-0.0.0.tgz}
+    resolution: {integrity: sha512-049610AIWM5eonoRKJonjdMQApYTTRilz5ZIMS2xWuiBMdjgzQOXPQrrpGaJ9K2Gr5793Nz7Bf5ni48gRtggaA==, tarball: file:externals/navara-three_api-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       three: '>=0.183.0'
 
   '@navara/three_csm@file:externals/navara-three_csm-0.0.0.tgz':
-    resolution: {integrity: sha512-jhT3+moybtAMzlySe2SNbg5kRe4HnPr2Cac+8n20MWif504ZGWBW/B28BdmQLQJeyeyQGFPGNWI+JETb+ETZww==, tarball: file:externals/navara-three_csm-0.0.0.tgz}
+    resolution: {integrity: sha512-5x/MPso2Z4ovqjDuECotPZcdvwAPuZ+TAbQaqLpUDQUIvt++zBK2AAuEL2GdodBvjEZ0URLeVeq+NzCBEp0L2A==, tarball: file:externals/navara-three_csm-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       three: '>=0.183.0'
 
   '@navara/three_default_descs@file:externals/navara-three_default_descs-0.0.0.tgz':
-    resolution: {integrity: sha512-4kUFI+G5H6JS64ACPVfQkQ65oWp3pSgEVNmEbooh1y2gr6kNUGv5S79EPs7P5aLurxSuskGI3m09ACtDinURrQ==, tarball: file:externals/navara-three_default_descs-0.0.0.tgz}
+    resolution: {integrity: sha512-EhojKSDOs+ZQHn6VngLXLz9nOhNiED9EFHofKuFXsp+zAZ6QMxf639Q3uco+a/mGuLNyBSqVA/GNnKv0DZuENA==, tarball: file:externals/navara-three_default_descs-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
@@ -144,13 +144,13 @@ packages:
       three: '>=0.183.0'
 
   '@navara/three_default_plugin@file:externals/navara-three_default_plugin-0.0.0.tgz':
-    resolution: {integrity: sha512-KhBCZg3W2cfLu7VT5+Qcto2HpfCfQV3Xzw+gHJmpIew5ZDsaIZfN/FoJBhQThTwBLk96ejlRUqyS3qf6vhp1nA==, tarball: file:externals/navara-three_default_plugin-0.0.0.tgz}
+    resolution: {integrity: sha512-8NSP6ovcfqXHZjY13xpEVYWyEr6nMT100KMZUtmNNdlSOZoZ2r0t0tg8JiwQYYcXocrzSHJURxShs521hm9eig==, tarball: file:externals/navara-three_default_plugin-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
 
   '@navara/three_plugins@file:externals/navara-three_plugins-0.0.0.tgz':
-    resolution: {integrity: sha512-wX8oJmxdgiWKW2nj/WV60yX4LP+RPsJlkhYPM3K0bFDUHiMKW3rdSAuBzOIh72TeCejgPU73yiDM/nx4C0HGVg==, tarball: file:externals/navara-three_plugins-0.0.0.tgz}
+    resolution: {integrity: sha512-opXmoiFTf65JyT9juL9poU4Xi5RwK5p6BhIp0R/CUZHkw2HwMzXMWDPWAIK58hTbgJFNG/8pq7yP9yxb6PlCyA==, tarball: file:externals/navara-three_plugins-0.0.0.tgz}
     version: 0.0.0
     peerDependencies:
       '@navara/three': 0.0.0
@@ -158,7 +158,7 @@ packages:
       three: '>=0.183.0'
 
   '@navara/worker@file:externals/navara-worker-0.0.0.tgz':
-    resolution: {integrity: sha512-zeRM7On1dTbyrwx/3F7a+PVsBeIUwiE7cbZuKDGNK0hmBRQmltPPrlF+H7cBneUu/ecmuIqnW0rAWAJGFgd4qg==, tarball: file:externals/navara-worker-0.0.0.tgz}
+    resolution: {integrity: sha512-yTESfYxGOC+BI5fGg/TIbX8+e7KG18Okv8o45Rl59L8cd9v959Fk2/WyJsua8zS3rlDJcapHr3yvokzx2+BQww==, tarball: file:externals/navara-worker-0.0.0.tgz}
     version: 0.0.0
 
   '@oxc-project/types@0.124.0':
