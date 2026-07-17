@@ -18,12 +18,12 @@ import type { SelectiveBloomEffectDesc } from "@navara/three_default_descs";
 import { AttributionPlugin } from "@navara/three_plugins";
 
 import { createCameraHud } from "./cameraHud";
-import { createPrefectureWidget, type Prefecture } from "./prefectureWidget";
 import {
-  createRailCompanyWidget,
+  createFilterWidget,
+  type Prefecture,
   type RailOperator,
   type RestMode,
-} from "./railCompanyWidget";
+} from "./filterWidget";
 
 // const view = new ThreeView<DefaultDescriptions>();
 const view = new ThreeView<DefaultDescriptions>({
@@ -263,41 +263,36 @@ const flyToBbox = ([west, south, east, north]: [
   );
 };
 
-// Company toggle widget, fed by the operator sidecar written by
-// scripts/prepare-rail-data.mjs.
-fetch("/data/rail-operators.json")
-  .then((res) => {
-    if (!res.ok) throw new Error(`rail-operators.json: HTTP ${res.status}`);
-    return res.json();
-  })
-  .then((operators: RailOperator[]) => {
+// Combined filter widget (companies + prefectures tabs), fed by the sidecars
+// written by scripts/prepare-rail-data.mjs. Each fetch fails independently so
+// one missing sidecar only hides its tab, not the whole widget.
+const loadJson = async <T>(url: string): Promise<T | null> => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as T;
+  } catch (err) {
+    console.error(`${url} failed:`, err);
+    return null;
+  }
+};
+
+Promise.all([
+  loadJson<RailOperator[]>("/data/rail-operators.json"),
+  loadJson<Prefecture[]>("/data/prefectures.json"),
+]).then(([operators, prefectures]) => {
+  if (operators || prefectures) {
     document.body.appendChild(
-      createRailCompanyWidget({
-        operators,
-        onChange: ({ focused, restMode: mode }) => {
+      createFilterWidget({
+        operators: operators ?? [],
+        prefectures: prefectures ?? [],
+        onRailChange: ({ focused, restMode: mode }) => {
           focusedOperators.clear();
           for (const op of focused) focusedOperators.add(op);
           restMode = mode;
           railLayer.forceUpdate();
         },
-        onZoom: flyToBbox,
-      }),
-    );
-  })
-  .catch((err) => console.error("rail company widget disabled:", err));
-
-// Prefecture toggle widget (top left), fed by the prefecture sidecar written
-// by scripts/prepare-rail-data.mjs.
-fetch("/data/prefectures.json")
-  .then((res) => {
-    if (!res.ok) throw new Error(`prefectures.json: HTTP ${res.status}`);
-    return res.json();
-  })
-  .then((prefectures: Prefecture[]) => {
-    document.body.appendChild(
-      createPrefectureWidget({
-        prefectures,
-        onChange: (selected) => {
+        onPrefChange: (selected) => {
           selectedPrefs.clear();
           for (const code of selected) selectedPrefs.add(code);
           railLayer.forceUpdate();
@@ -305,28 +300,29 @@ fetch("/data/prefectures.json")
         onZoom: flyToBbox,
       }),
     );
+  }
+  if (prefectures) {
     if (introRunning) {
       // Small delay so the first tiles/features are on screen when the
       // sweep begins.
       setTimeout(() => runIntroReveal(prefectures.map((p) => p.code)), 600);
     }
-  })
-  .catch((err) => {
-    console.error("prefecture widget disabled:", err);
+  } else {
     // Without the prefecture list the intro could never finish revealing;
     // fail open and show everything.
     introRunning = false;
     railLayer.forceUpdate();
-  });
+  }
+});
 
 // Default camera: over Japan. Looking straight down, screen-up is decided
 // entirely by heading, so pin it to 0 (north) explicitly.
 view.setCamera({
-  lng: 137.9706,
-  lat: 34.0822,
-  height: 1_400_000,
-  pitch: -75,
-  heading: 352.0,
+  lng: 141.0965,
+  lat: 38.0547,
+  height: 1_380_000,
+  pitch: -85.3,
+  heading: 334.2,
   roll: -49.2,
 });
 
