@@ -89,6 +89,14 @@ export function createCameraHud(camera: CameraLike): HTMLElement {
   const grid = document.createElement("div");
   grid.className = "camera-hud-grid";
   const values = new Map<string, HTMLSpanElement>();
+  const LABELS: Record<string, string> = {
+    lat: "緯度",
+    lng: "経度",
+    alt: "高度",
+    heading: "方位",
+    pitch: "傾き",
+    zoom: "ズーム",
+  };
   for (const label of ["lat", "lng", "alt", "heading", "pitch", "zoom"]) {
     const cell = document.createElement("div");
     const value = Object.assign(document.createElement("span"), {
@@ -98,7 +106,7 @@ export function createCameraHud(camera: CameraLike): HTMLElement {
     cell.append(
       Object.assign(document.createElement("span"), {
         className: "camera-hud-label",
-        textContent: label,
+        textContent: LABELS[label],
       }),
       value,
     );

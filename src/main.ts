@@ -1,18 +1,37 @@
 import ThreeView, { Color, type FeatureEvaluator } from "@navara/three";
+// Used by the commented-out photoreal-scene block below:
+// import type {
+//   SkyMeshDesc,
+//   StarsDesc,
+//   SkyLightProbeDesc,
+//   SunLightDesc,
+//   AerialPerspectiveEffectDesc,
+//   LensFlareEffectDesc,
+//   ToneMappingEffectDesc,
+//   SMAAEffectDesc,
+// } from "@navara/three_default_descs";
 import {
   DefaultDescriptions,
   DefaultPlugin,
 } from "@navara/three_default_plugin";
-// import type { SelectiveBloomEffectDesc } from "@navara/three_default_descs";
+import type { SelectiveBloomEffectDesc } from "@navara/three_default_descs";
 import { AttributionPlugin } from "@navara/three_plugins";
 
 import { createCameraHud } from "./cameraHud";
+import { createPrefectureWidget, type Prefecture } from "./prefectureWidget";
 import {
   createRailCompanyWidget,
   type RailOperator,
+  type RestMode,
 } from "./railCompanyWidget";
 
-const view = new ThreeView<DefaultDescriptions>();
+// const view = new ThreeView<DefaultDescriptions>();
+const view = new ThreeView<DefaultDescriptions>({
+  useNormal: true,
+  atmosphere: {
+    date: new Date("2024-06-21T12:00:00"),
+  },
+});
 
 // Plugins
 
@@ -27,13 +46,38 @@ view.addPlugin(defaultPlugin);
 await view.init();
 
 // Setup scene
-defaultPlugin.addDefaultPhotorealScene();
+// defaultPlugin.addDefaultPhotorealScene();
 
-view.atmosphere.date.setHours(17);
-// view.atmosphere.date.setHours(4, 30, 0, 0); // 4:30 JST, sunrise over Tokyo
+// PhotorealScene default settings - start
+// Meshes
+// const sky = view.addMesh<SkyMeshDesc>({ sky: {} });
+// const stars = view.addMesh<StarsDesc>({ stars: {} });
+
+// // Lights
+// const skyLightProbe = view.addLight<SkyLightProbeDesc>({ skyLightProbe: {} });
+// const sun = view.addLight<SunLightDesc>({ sun: {} });
+view.addMesh({ sky: {} });
+view.addLight({ sun: {} });
+
+// // Effects
+// const aerialPerspective = view.addEffect<AerialPerspectiveEffectDesc>({
+//   aerialPerspective: {},
+// });
+// const lensFlare = view.addEffect<LensFlareEffectDesc>({ lensFlare: {} }); // skipped on mobile
+// const toneMapping = view.addEffect<ToneMappingEffectDesc>({ toneMapping: {} });
+// const antialiasing = view.addEffect<SMAAEffectDesc>({ smaa: {} }); // FXAA instead on mobile
+// PhotorealScene default settings - end
+
+// view.atmosphere.date.setHours(5, 30, 0, 0); // 5:30 JST, sunrise over Tokyo
 view.toneMappingExposure = 10;
 
 // Layer declarations
+
+// const raster = view.addSource({
+//   type: "raster-tile",
+//   url: "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+//   maxZoom: 18,
+// });
 
 const raster = view.addSource({
   type: "raster-tile",
@@ -51,31 +95,31 @@ view.addLayer({
   raster: {},
 });
 
-const terrain = view.addSource({
-  type: "quantized-mesh",
-  url: "https://terrain.reearth.land/cesium-mesh/ellipsoid/{z}/{x}/{y}.terrain",
-  maxZoom: 18,
-  requestVertexNormals: true,
-  requestWaterMask: true,
-});
+// const terrain = view.addSource({
+//   type: "quantized-mesh",
+//   url: "https://terrain.reearth.land/cesium-mesh/ellipsoid/{z}/{x}/{y}.terrain",
+//   maxZoom: 18,
+//   requestVertexNormals: true,
+//   requestWaterMask: true,
+// });
 
-view.addLayer({
-  type: "terrain",
-  source: terrain,
-  terrain: {},
-});
+// view.addLayer({
+//   type: "terrain",
+//   source: terrain,
+//   terrain: {},
+// });
 
 // Rail network (MLIT KSJ N02), one MultiLineString feature per line with a
 // `color` property resolved by scripts/prepare-rail-data.mjs.
 
-// view.addEffect<SelectiveBloomEffectDesc>({
-//   id: "railBloom",
-//   selectiveBloom: {
-//     strength: 1.2,
-//     radius: 0.3,
-//     threshold: 0,
-//   },
-// });
+view.addEffect<SelectiveBloomEffectDesc>({
+  id: "railBloom",
+  selectiveBloom: {
+    strength: 1.2,
+    radius: 0.3,
+    threshold: 0,
+  },
+});
 
 // Dataset can be overridden for debugging, e.g. ?rail=/data/rail-tokyo.geojson
 const railDataUrl =
@@ -101,26 +145,123 @@ const railLayer = view.addLayer({
     height: 200,
     width: 4,
     maxWidth: 4,
-    emissiveIntensity: 1.5,
-    // effectIds: ["railBloom"],
+    emissiveIntensity: 2.5,
+    effectIds: ["railBloom"],
   },
 });
 
-// Operators unchecked in the company widget; features are re-styled against
-// this set via forceUpdate() -> featureUpdated.
-const hiddenOperators = new Set<string>();
+// Widget focus state mirrored for the evaluator; features are re-styled
+// against it via forceUpdate() -> featureUpdated. Non-focused companies are
+// de-emphasized per restMode: "dim" keeps their color recognizable but thins
+// the line and softens the glow (the bloom source is the evaluated color ×
+// emissiveIntensity), "hide" removes them from the globe.
+const focusedOperators = new Set<string>();
+let restMode: RestMode = "dim";
+const DIM_FACTOR = 0.55;
+
+// Selected prefectures (JIS codes). Empty = no prefecture filtering. Features
+// carry a `pref` tag from prepare-rail-data.mjs; pieces outside the selection
+// are hidden entirely (prefecture filtering cuts, operator focus dims).
+const selectedPrefs = new Set<number>();
+
+// Intro reveal: prefectures "come online" one after another in JIS-code
+// order (北海道 → 沖縄, a north-to-south sweep). While the intro runs,
+// features stay hidden until their prefecture is revealed; the most recently
+// revealed prefecture renders over-bright for one step (a bloom pop) before
+// settling. Features created mid-intro (the GeoJSON parses asynchronously)
+// are evaluated against the current reveal state, so they slot in correctly.
+// Skippable with ?noIntro.
+const revealedPrefs = new Set<number>();
+let introRunning = !new URLSearchParams(location.search).has("noIntro");
+let glowingPref: number | undefined;
+const INTRO_STEP_MS = 100;
+const INTRO_POP_SCALE = 1.9;
+
+const runIntroReveal = (codes: number[]) => {
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= codes.length) {
+      clearInterval(timer);
+      glowingPref = undefined;
+      introRunning = false;
+      railLayer.forceUpdate();
+      return;
+    }
+    revealedPrefs.add(codes[i]);
+    glowingPref = codes[i];
+    i++;
+    railLayer.forceUpdate();
+  }, INTRO_STEP_MS);
+};
+
+// Navara's Color has no channel arithmetic; our colors are always #rrggbb
+// (from prepare-rail-data.mjs), so parse and scale the channels directly.
+const railColor = (hex: string, scale: number) => {
+  const v = parseInt(hex.slice(1), 16);
+  return new Color().setRGB(
+    (((v >> 16) & 255) / 255) * scale,
+    (((v >> 8) & 255) / 255) * scale,
+    ((v & 255) / 255) * scale,
+  );
+};
 
 const applyRailStyle = ({ evaluator }: { evaluator: FeatureEvaluator }) => {
   evaluator.evaluate(
-    ({ properties }) => ({
-      color: new Color().setStyle((properties?.color as string) ?? "#8899aa"),
-      show: !hiddenOperators.has(properties?.op as string),
-    }),
-    { filters: ["op", "color"] },
+    ({ properties }) => {
+      const pref = properties?.pref as number | undefined;
+      // pref === undefined covers debug datasets without prefecture tags.
+      if (introRunning && pref !== undefined && !revealedPrefs.has(pref)) {
+        return { show: false };
+      }
+      if (
+        selectedPrefs.size > 0 &&
+        pref !== undefined &&
+        !selectedPrefs.has(pref)
+      ) {
+        return { show: false };
+      }
+      const op = properties?.op as string;
+      const deemphasized =
+        focusedOperators.size > 0 &&
+        !focusedOperators.has(op) &&
+        restMode !== "all";
+      if (deemphasized && restMode === "hide") return { show: false };
+      const popScale =
+        introRunning && pref === glowingPref ? INTRO_POP_SCALE : 1;
+      return {
+        color: railColor(
+          (properties?.color as string) ?? "#8899aa",
+          (deemphasized ? DIM_FACTOR : 1) * popScale,
+        ),
+        width: 4,
+        show: true,
+      };
+    },
+    { filters: ["op", "color", "pref"] },
   );
 };
 railLayer.on("featureCreated", applyRailStyle);
 railLayer.on("featureUpdated", applyRailStyle);
+
+// Fly the camera to fit a [west, south, east, north] bbox.
+const flyToBbox = ([west, south, east, north]: [
+  number,
+  number,
+  number,
+  number,
+]) => {
+  const lat = (south + north) / 2;
+  // Height that fits the bbox's larger side (~111.32 km per degree,
+  // longitude shrunk by cos(lat)), with margin and sane bounds.
+  const extent =
+    111_320 *
+    Math.max(north - south, (east - west) * Math.cos((lat * Math.PI) / 180));
+  const height = Math.min(Math.max(extent * 1.4, 30_000), 2_500_000);
+  view.flyTo(
+    { lng: (west + east) / 2, lat, height, pitch: -90, heading: 0 },
+    1_500,
+  );
+};
 
 // Company toggle widget, fed by the operator sidecar written by
 // scripts/prepare-rail-data.mjs.
@@ -133,40 +274,59 @@ fetch("/data/rail-operators.json")
     document.body.appendChild(
       createRailCompanyWidget({
         operators,
-        onChange: (hidden) => {
-          hiddenOperators.clear();
-          for (const op of hidden) hiddenOperators.add(op);
+        onChange: ({ focused, restMode: mode }) => {
+          focusedOperators.clear();
+          for (const op of focused) focusedOperators.add(op);
+          restMode = mode;
           railLayer.forceUpdate();
         },
-        onZoom: ([west, south, east, north]) => {
-          const lat = (south + north) / 2;
-          // Height that fits the bbox's larger side (~111.32 km per degree,
-          // longitude shrunk by cos(lat)), with margin and sane bounds.
-          const extent =
-            111_320 *
-            Math.max(
-              north - south,
-              (east - west) * Math.cos((lat * Math.PI) / 180),
-            );
-          const height = Math.min(Math.max(extent * 1.4, 30_000), 2_500_000);
-          view.flyTo(
-            { lng: (west + east) / 2, lat, height, pitch: -90, heading: 0 },
-            1_500,
-          );
-        },
+        onZoom: flyToBbox,
       }),
     );
   })
   .catch((err) => console.error("rail company widget disabled:", err));
 
+// Prefecture toggle widget (top left), fed by the prefecture sidecar written
+// by scripts/prepare-rail-data.mjs.
+fetch("/data/prefectures.json")
+  .then((res) => {
+    if (!res.ok) throw new Error(`prefectures.json: HTTP ${res.status}`);
+    return res.json();
+  })
+  .then((prefectures: Prefecture[]) => {
+    document.body.appendChild(
+      createPrefectureWidget({
+        prefectures,
+        onChange: (selected) => {
+          selectedPrefs.clear();
+          for (const code of selected) selectedPrefs.add(code);
+          railLayer.forceUpdate();
+        },
+        onZoom: flyToBbox,
+      }),
+    );
+    if (introRunning) {
+      // Small delay so the first tiles/features are on screen when the
+      // sweep begins.
+      setTimeout(() => runIntroReveal(prefectures.map((p) => p.code)), 600);
+    }
+  })
+  .catch((err) => {
+    console.error("prefecture widget disabled:", err);
+    // Without the prefecture list the intro could never finish revealing;
+    // fail open and show everything.
+    introRunning = false;
+    railLayer.forceUpdate();
+  });
+
 // Default camera: over Japan. Looking straight down, screen-up is decided
 // entirely by heading, so pin it to 0 (north) explicitly.
 view.setCamera({
-  lng: 140.2061,
-  lat: 30.0036,
-  height: 1_500_000,
-  pitch: -60,
-  heading: 351.9,
+  lng: 137.9706,
+  lat: 34.0822,
+  height: 1_400_000,
+  pitch: -75,
+  heading: 352.0,
   roll: -49.2,
 });
 
@@ -176,16 +336,19 @@ document.body.appendChild(createCameraHud(view.camera));
 // Attribution
 
 attribution.show([
+  // Match the active raster source: EOX satellite. When switching back to
+  // CARTO dark matter, swap in:
+  //   { attributionHtml: `© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>` },
   {
     attributionHtml: `<a href="https://s2maps.eu">Sentinel-2 cloudless 2020</a> by <a href="https://eox.at">EOX IT Services GmbH</a> (contains modified Copernicus Sentinel data 2020)`,
     attributionUrl: "https://www.openstreetmap.org/copyright",
   },
   {
-    attribution: "© Re:Earth Terrain",
-    attributionUrl: "https://terrain.reearth.land/",
+    attribution: "国土数値情報（鉄道データ）",
+    attributionUrl:
+      "https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v2_3.html",
   },
-  {
-    attribution: "© Mapterhorn",
-    attributionUrl: "https://mapterhorn.com/",
-  },
+  // Terrain is currently disabled; restore these with the terrain layer:
+  // { attribution: "© Re:Earth Terrain", attributionUrl: "https://terrain.reearth.land/" },
+  // { attribution: "© Mapterhorn", attributionUrl: "https://mapterhorn.com/" },
 ]);
